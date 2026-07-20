@@ -331,7 +331,22 @@ const CATEGORIES = [
 "Kinds of paper","Things you can pour","Types of lights","Something you'd take on a plane","Things that hang on a wall",
 "Types of games","Things at a zoo","Something with buttons","Types of boats","Things you do with your hands",
 "Words used at work","Something in a junk drawer","Kinds of sauces","Things that come in threes","Something you charge",
-"Types of pets","Things that are frozen","Words on a road trip playlist","Something that spins","Things in a lunchbox"
+"Types of pets","Things that are frozen","Words on a road trip playlist","Something that spins","Things in a lunchbox",
+"Things in a movie theater","Things you do on a Sunday","Types of sandwiches","Things in a hotel room","Things at a hardware store",
+"Reasons to leave a party early","Things in a jewelry box","Amusement park rides","Things you sit on","Kinds of nuts",
+"Things in a baby's room","Something you do standing up","Things that need water","School supplies","Things in a medicine cabinet",
+"Words used in sports","Something you'd find in the trash","Things in a castle","Types of cake","Places to go on a date",
+"Things that are square","Kinds of fish","Things at a sporting event","Something you'd bring to a potluck","Types of pants",
+"Things in a diner","Words in a fairy tale","Things that come in cans","Something you do quietly","Types of berries",
+"Things at a construction site","Kinds of trucks","Things in a bakery","Types of coffee drinks","Something with wheels",
+"Words that describe music","Things in a fish tank","Something you do in the morning","Things at a birthday party","Types of movies",
+"Things that are heavy","Things in an attic","Things in a shower","Things you can recycle","Words on a T-shirt",
+"Things at a fire station","Types of chairs","Something you do on vacation","Things at a swimming pool","Ways to cook eggs",
+"U.S. states","Things you do with paper","Types of storms","Things in a treehouse","Things in a locker",
+"Something you'd find in a car","Dog breeds","Things in a barber shop","Things that are transparent","Something you sign",
+"Types of jewelry","Things in a tent","Things you find in a couch","Something you'd donate","Types of houses",
+"Things at a bus stop","Types of exercise","Words that mean happy","Things at a haunted house","Things you do at school",
+"Something you'd find in space","Rooms in a house","Things you can share","Bands and musical groups","Things at a garage sale"
 ];
 
 /* ---------------- state ---------------- */
@@ -419,6 +434,7 @@ function tick(){
 }
 function start(){
   if(ticking || left === 0) return;
+  unlockAudio();
   ticking = true;
   reveal();
   $("startBtn").textContent = "Pause";
@@ -438,20 +454,36 @@ function reset(){
   left = total; stop(); conceal(); $("state").textContent = "Ready"; paint();
 }
 
-/* short buzzer */
-function chime(){
+/* end-of-round buzzer */
+let audio = null;
+function unlockAudio(){
   try{
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
-    [0,0.32,0.64].forEach(t=>{
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = "square"; o.frequency.value = 320;
-      o.connect(g); g.connect(ctx.destination);
-      g.gain.setValueAtTime(0.0001, ctx.currentTime+t);
-      g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime+t+0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+t+0.26);
-      o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.28);
-    });
+    if(!audio) audio = new (window.AudioContext||window.webkitAudioContext)();
+    if(audio.state === "suspended") audio.resume();
   }catch(e){}
+}
+function chime(){
+  unlockAudio();
+  if(!audio) return;
+  const now = audio.currentTime;
+  /* three short low blasts, two detuned oscillators each for a harder edge */
+  [0, 0.45, 0.90].forEach(offset=>{
+    const t = now + offset, end = t + 0.34;
+    const gain = audio.createGain();
+    gain.connect(audio.destination);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.32, t + 0.015);
+    gain.gain.setValueAtTime(0.32, end - 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    [196, 262].forEach(freq=>{
+      const osc = audio.createOscillator();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      osc.start(t);
+      osc.stop(end);
+    });
+  });
 }
 
 /* ---------------- wiring ---------------- */
