@@ -59,18 +59,21 @@
   /* ---------- letter ---------- */
   .letter-panel{
     background:var(--paper);color:var(--ink);padding:clamp(14px,2vh,24px) 26px;
-    flex:1;min-height:0;display:flex;flex-direction:column;
+    flex:0 0 44%;min-height:0;display:flex;flex-direction:column;position:relative;
   }
-  .letter-panel .panel-label{color:var(--mute);flex-shrink:0;}
+  .letter-panel .panel-label{
+    color:var(--mute);position:absolute;top:clamp(14px,2vh,24px);left:26px;right:26px;
+  }
   .panel-label{
     font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
     display:flex;justify-content:space-between;align-items:center;
   }
   .letter{
-    font-size:min(17vw,26vh);font-weight:900;letter-spacing:-.07em;
+    font-size:min(15vw,21vh);font-weight:900;letter-spacing:0;
     line-height:.82;text-align:center;margin:0;user-select:none;
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
   }
+  .letter span{display:block;}
   .reroll{
     width:100%;background:var(--paper);border:1px solid var(--ink);padding:clamp(9px,1.4vh,13px) 0;
     font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;flex-shrink:0;
@@ -85,39 +88,46 @@
   }
 
   /* ---------- timer ---------- */
-  .timer-panel{padding:clamp(14px,2vh,24px) 26px;border-top:1px solid var(--rule);flex-shrink:0;}
+  .timer-panel{
+    padding:clamp(14px,2vh,24px) 26px clamp(24px,3.8vh,42px);border-top:1px solid var(--rule);
+    flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;
+    gap:clamp(7px,1.2vh,13px);
+  }
   .rail .timer-panel{border-top:1px solid var(--ink);}
   .clock{
-    font-family:var(--mono);font-weight:700;font-size:min(6.5vw,9vh);
-    letter-spacing:-.03em;line-height:1;margin:clamp(6px,1.2vh,12px) 0 clamp(6px,1.2vh,10px);
+    font-family:var(--display);font-weight:800;font-size:min(8vw,12vh);
+    letter-spacing:-.03em;line-height:1;margin:0;
     font-variant-numeric:tabular-nums;font-feature-settings:"zero" 0,"ss01" 0;
   }
   .clock.done{animation:blink 1s steps(1) infinite;}
   @keyframes blink{50%{opacity:.18}}
   @media (prefers-reduced-motion:reduce){.clock.done{animation:none;}}
-  .track{height:4px;background:var(--wash);border:1px solid var(--rule);}
+  .track{height:4px;background:var(--wash);border:1px solid var(--rule);flex-shrink:0;}
   .fill{height:100%;background:var(--ink);width:100%;transition:width .25s linear;}
 
-  .presets{display:flex;margin:clamp(8px,1.4vh,14px) 0 0;border:1px solid var(--ink);}
+  .presets{display:flex;margin:0;border:1px solid var(--ink);}
   .presets button{
     flex:1;background:var(--paper);border:0;border-right:1px solid var(--ink);
-    padding:clamp(6px,1.1vh,9px) 0;font-family:var(--mono);font-size:12px;cursor:pointer;letter-spacing:.04em;
+    padding:clamp(6px,1.1vh,9px) 0;font-family:var(--display);font-weight:600;
+    font-size:13px;cursor:pointer;letter-spacing:.04em;font-variant-numeric:tabular-nums;
   }
   .presets button:last-child{border-right:0;}
   .presets button[aria-pressed="true"]{background:var(--ink);color:var(--paper);}
   .presets button:hover{background:var(--wash);}
   .presets button[aria-pressed="true"]:hover{background:var(--ink);}
 
-  .custom{display:flex;align-items:center;gap:8px;margin-top:clamp(8px,1.3vh,12px);}
+  .custom{display:flex;align-items:center;gap:8px;margin-top:0;}
   .custom label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);}
   .custom input{
     width:74px;padding:6px 8px;border:1px solid var(--ink);background:var(--paper);
-    font-family:var(--mono);font-size:13px;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:14px;text-align:center;
+    font-variant-numeric:tabular-nums;
   }
+  #rollCount,#count{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;}
 
-  .controls{display:grid;grid-template-columns:1fr 1fr;margin-top:clamp(8px,1.4vh,14px);border:1px solid var(--ink);}
+  .controls{display:grid;grid-template-columns:1fr 1fr;margin-top:0;border:1px solid var(--ink);}
   .controls button{
-    background:var(--paper);border:0;border-right:1px solid var(--ink);padding:clamp(9px,1.5vh,13px) 0;
+    background:var(--paper);border:0;border-right:1px solid var(--ink);padding:clamp(15px,2.6vh,24px) 0;
     font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
   }
   .controls button:last-child{border-right:0;}
@@ -172,8 +182,13 @@
 
   .veil{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--paper);pointer-events:none;transition:opacity .3s ease;
+    pointer-events:none;transition:opacity .3s ease;
+  }
+  .veil span{
+    background:var(--ink);color:var(--paper);border:1px solid var(--paper);
+    padding:16px 30px;font-family:var(--mono);font-weight:500;
+    font-size:clamp(12px,1.6vh,15px);letter-spacing:.26em;text-transform:uppercase;
+    text-indent:.26em;
   }
   .cats-wrap{position:relative;flex:1;min-height:0;}
   .cats-wrap.open .veil{opacity:0;}
@@ -219,7 +234,7 @@
     <div class="rail">
       <section class="letter-panel">
         <div class="panel-label"><span>Letter</span><span id="rollCount">Round 01</span></div>
-        <div class="letter" id="letter" aria-live="polite">A</div>
+        <div class="letter" id="letter" aria-live="polite"><span>A</span></div>
         <button class="reroll" id="rerollBtn">Reroll letter</button>
       </section>
 
@@ -264,7 +279,7 @@
       </div>
       <div class="cats-wrap" id="catsWrap">
         <ol class="cats" id="cats"></ol>
-        <div class="veil" id="veil">Press start to reveal</div>
+        <div class="veil" id="veil"><span>Press start to reveal</span></div>
       </div>
     </div>
 
@@ -350,14 +365,34 @@ $("cats").addEventListener("click", e=>{
 
 /* ---------------- letter ---------------- */
 let lastLetter = null;
+let measureCtx = null;
+
+/* Centers the glyph by its actual ink box, not its line box, so caps
+   with no descender don't sit high in the panel. */
+function centerLetter(){
+  const el = $("letter"), span = el.querySelector("span");
+  const cs = getComputedStyle(el);
+  const size = parseFloat(cs.fontSize);
+  const lineBox = parseFloat(cs.lineHeight) || size;
+  if(!measureCtx) measureCtx = document.createElement("canvas").getContext("2d");
+  measureCtx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+  const m = measureCtx.measureText(span.textContent || "A");
+  if(!m.fontBoundingBoxAscent){ span.style.transform = ""; return; }
+  const halfLeading = (lineBox - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2;
+  const baseline = halfLeading + m.fontBoundingBoxAscent;
+  const inkCenter = baseline - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+  span.style.transform = `translateY(${(lineBox / 2 - inkCenter).toFixed(2)}px)`;
+}
+
 function drawLetter(){
   let L;
   do { L = LETTERS[Math.floor(Math.random()*LETTERS.length)]; }
   while (L === lastLetter && LETTERS.length > 1);
   lastLetter = L;
   const el = $("letter");
-  el.textContent = L;
+  el.querySelector("span").textContent = L;
   el.classList.remove("roll"); void el.offsetWidth; el.classList.add("roll");
+  centerLetter();
 }
 
 /* ---------------- timer ---------------- */
@@ -470,6 +505,8 @@ document.addEventListener("keydown", e=>{
 
 /* first round */
 newRound();
+window.addEventListener("resize", centerLetter);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(centerLetter);
 </script>
 </body>
 </html>
