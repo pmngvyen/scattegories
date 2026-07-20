@@ -30,15 +30,15 @@
   button,input,select{font:inherit;color:inherit;border-radius:0;}
   :focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
 
-  .frame{max-width:1180px;margin:0 auto;border-left:1px solid var(--rule);border-right:1px solid var(--rule);min-height:100vh;}
+  .frame{max-width:1500px;margin:0 auto;border-left:1px solid var(--rule);border-right:1px solid var(--rule);min-height:100vh;display:flex;flex-direction:column;}
 
   /* ---------- masthead ---------- */
   header{
     display:flex;align-items:baseline;justify-content:space-between;gap:24px;
-    padding:20px 28px 16px;border-bottom:1px solid var(--ink);flex-wrap:wrap;
+    padding:26px 36px 22px;border-bottom:1px solid var(--ink);flex-wrap:wrap;
   }
   .wordmark{
-    font-size:clamp(26px,4.4vw,44px);font-weight:900;letter-spacing:-.045em;
+    font-size:clamp(30px,5.2vw,58px);font-weight:900;letter-spacing:-.045em;
     text-transform:uppercase;margin:0;line-height:1;
   }
   .tag{
@@ -47,7 +47,7 @@
   }
 
   /* ---------- main grid ---------- */
-  .board{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);}
+  .board{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);flex:1;}
   .rail{border-right:1px solid var(--ink);}
   @media (max-width:860px){
     .board{grid-template-columns:1fr;}
@@ -55,16 +55,21 @@
   }
 
   /* ---------- letter ---------- */
-  .letter-panel{background:var(--paper);color:var(--ink);padding:18px 22px 24px;}
+  .letter-panel{background:var(--paper);color:var(--ink);padding:24px 28px 28px;}
   .letter-panel .panel-label{color:var(--mute);}
   .panel-label{
     font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
     display:flex;justify-content:space-between;align-items:center;
   }
   .letter{
-    font-size:clamp(150px,22vw,240px);font-weight:900;letter-spacing:-.07em;
-    line-height:.82;text-align:center;margin:14px 0 12px;user-select:none;
+    font-size:clamp(170px,15vw,270px);font-weight:900;letter-spacing:-.07em;
+    line-height:.82;text-align:center;margin:18px 0 22px;user-select:none;
   }
+  .reroll{
+    width:100%;background:var(--paper);border:1px solid var(--ink);padding:12px 0;
+    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  }
+  .reroll:hover{background:var(--ink);color:var(--paper);}
   .letter.roll{animation:flick .34s steps(6) 1;}
   @keyframes flick{0%{opacity:.15}50%{opacity:.55}100%{opacity:1}}
   @media (prefers-reduced-motion:reduce){.letter.roll{animation:none}}
@@ -74,10 +79,10 @@
   }
 
   /* ---------- timer ---------- */
-  .timer-panel{padding:18px 22px 22px;border-top:1px solid var(--rule);}
+  .timer-panel{padding:24px 28px 28px;border-top:1px solid var(--rule);}
   .rail .timer-panel{border-top:1px solid var(--ink);}
   .clock{
-    font-family:var(--mono);font-weight:700;font-size:clamp(46px,8.5vw,66px);
+    font-family:var(--mono);font-weight:700;font-size:clamp(52px,6vw,78px);
     letter-spacing:-.03em;line-height:1;margin:12px 0 10px;font-variant-numeric:tabular-nums;
   }
   .clock.done{animation:blink 1s steps(1) infinite;}
@@ -116,7 +121,7 @@
   /* ---------- categories ---------- */
   .list-head{
     display:flex;justify-content:space-between;align-items:center;gap:16px;
-    padding:14px 26px;border-bottom:1px solid var(--ink);flex-wrap:wrap;
+    padding:18px 34px;border-bottom:1px solid var(--ink);flex-wrap:wrap;
   }
   .list-head h2{
     margin:0;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
@@ -131,7 +136,7 @@
   ol.cats{list-style:none;margin:0;padding:0;counter-reset:c;}
   ol.cats li{
     counter-increment:c;display:flex;align-items:baseline;gap:16px;
-    padding:13px 26px;border-bottom:1px solid var(--rule);cursor:pointer;
+    padding:18px 34px;border-bottom:1px solid var(--rule);cursor:pointer;
     position:relative;overflow:hidden;
   }
   ol.cats li:hover{background:var(--wash);}
@@ -163,14 +168,14 @@
   .cats-wrap.open .veil{opacity:0;}
   ol.cats li::before{
     content:counter(c,decimal-leading-zero);
-    font-family:var(--mono);font-size:11px;color:var(--mute);min-width:22px;
+    font-family:var(--mono);font-size:12px;color:var(--mute);min-width:26px;
   }
-  ol.cats li span{font-size:clamp(15px,1.9vw,18px);font-weight:500;letter-spacing:-.01em;}
+  ol.cats li span{font-size:clamp(16px,1.55vw,21px);font-weight:500;letter-spacing:-.01em;}
   ol.cats li.struck span{text-decoration:line-through;color:var(--mute);}
   ol.cats li.struck::before{color:var(--ink);}
 
   footer{
-    padding:14px 26px 26px;border-top:1px solid var(--ink);
+    padding:18px 34px 26px;border-top:1px solid var(--ink);
     font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);
     display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   }
@@ -192,6 +197,7 @@
       <section class="letter-panel">
         <div class="panel-label"><span>Letter</span><span id="rollCount">Round 01</span></div>
         <div class="letter" id="letter" aria-live="polite">A</div>
+        <button class="reroll" id="rerollBtn">Reroll letter</button>
       </section>
 
       <section class="timer-panel">
@@ -242,7 +248,7 @@
   </div>
 
   <footer>
-    <span><kbd>N</kbd> new round · <kbd>Space</kbd> start or pause · <kbd>R</kbd> reset</span>
+    <span><kbd>N</kbd> new round · <kbd>L</kbd> reroll letter · <kbd>Space</kbd> start or pause · <kbd>R</kbd> reset</span>
     <span>Click a category to cross it off</span>
   </footer>
 </div>
@@ -428,6 +434,7 @@ function newRound(){
   reset();
 }
 $("newRound").addEventListener("click", newRound);
+$("rerollBtn").addEventListener("click", drawLetter);
 
 document.addEventListener("keydown", e=>{
   if(["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName)) return;
@@ -435,6 +442,7 @@ document.addEventListener("keydown", e=>{
   if(k === " " || e.code === "Space"){ e.preventDefault(); toggle(); }
   else if(k === "r"){ reset(); }
   else if(k === "n"){ newRound(); }
+  else if(k === "l"){ drawLetter(); }
 });
 
 /* first round */
