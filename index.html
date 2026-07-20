@@ -55,14 +55,15 @@
   }
 
   /* ---------- letter ---------- */
-  .letter-panel{background:var(--ink);color:var(--paper);padding:18px 22px 24px;}
+  .letter-panel{background:var(--paper);color:var(--ink);padding:18px 22px 24px;}
+  .letter-panel .panel-label{color:var(--mute);}
   .panel-label{
     font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
     display:flex;justify-content:space-between;align-items:center;
   }
   .letter{
     font-size:clamp(150px,22vw,240px);font-weight:900;letter-spacing:-.07em;
-    line-height:.82;text-align:center;margin:14px 0 4px;user-select:none;
+    line-height:.82;text-align:center;margin:14px 0 12px;user-select:none;
   }
   .letter.roll{animation:flick .34s steps(6) 1;}
   @keyframes flick{0%{opacity:.15}50%{opacity:.55}100%{opacity:1}}
@@ -74,7 +75,7 @@
 
   /* ---------- timer ---------- */
   .timer-panel{padding:18px 22px 22px;border-top:1px solid var(--rule);}
-  .rail .timer-panel{border-top:1px solid var(--rule);}
+  .rail .timer-panel{border-top:1px solid var(--ink);}
   .clock{
     font-family:var(--mono);font-weight:700;font-size:clamp(46px,8.5vw,66px);
     letter-spacing:-.03em;line-height:1;margin:12px 0 10px;font-variant-numeric:tabular-nums;
@@ -191,7 +192,6 @@
       <section class="letter-panel">
         <div class="panel-label"><span>Letter</span><span id="rollCount">Round 01</span></div>
         <div class="letter" id="letter" aria-live="polite">A</div>
-        <p class="letter-note">Q · U · V · X · Y · Z never appear</p>
       </section>
 
       <section class="timer-panel">
