@@ -123,7 +123,7 @@
     font-family:var(--display);font-weight:600;font-size:14px;text-align:center;
     font-variant-numeric:tabular-nums;
   }
-  #rollCount,#count{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;}
+  #rollCount{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;}
 
   .controls{display:grid;grid-template-columns:1fr 1fr;margin-top:0;border:1px solid var(--ink);}
   .controls button{
@@ -144,11 +144,35 @@
     margin:0;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
   }
   .head-actions{display:flex;align-items:center;gap:10px;}
-  .head-actions select,.ghost{
+  .head-actions .dd-btn,.ghost{
     border:1px solid var(--ink);background:var(--paper);padding:6px 10px;
     font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
   }
   .ghost:hover{background:var(--ink);color:var(--paper);}
+
+  /* custom dropdown */
+  .dd{position:relative;}
+  .dd-btn{display:flex;align-items:center;gap:10px;}
+  .dd-btn:hover,.dd.open .dd-btn{background:var(--ink);color:var(--paper);}
+  .caret{
+    width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+    border-top:5px solid currentColor;display:block;
+  }
+  .dd.open .caret{border-top:0;border-bottom:5px solid currentColor;}
+  .dd-menu{
+    position:absolute;top:calc(100% + 4px);right:0;min-width:100%;z-index:20;
+    list-style:none;margin:0;padding:0;background:var(--paper);border:1px solid var(--ink);
+    display:none;
+  }
+  .dd.open .dd-menu{display:block;}
+  .dd-menu li{
+    padding:8px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;
+    text-transform:uppercase;cursor:pointer;white-space:nowrap;
+    border-bottom:1px solid var(--rule);
+  }
+  .dd-menu li:last-child{border-bottom:0;}
+  .dd-menu li:hover{background:var(--wash);}
+  .dd-menu li[aria-selected="true"]{background:var(--ink);color:var(--paper);}
 
   ol.cats{
     list-style:none;margin:0;padding:0;counter-reset:c;
@@ -269,11 +293,17 @@
       <div class="list-head">
         <h2>Categories</h2>
         <div class="head-actions">
-          <select id="count" aria-label="Number of categories">
-            <option value="10">10 items</option>
-            <option value="12" selected>12 items</option>
-            <option value="16">16 items</option>
-          </select>
+          <div class="dd" id="countDD">
+            <button class="dd-btn" id="countBtn" aria-haspopup="listbox" aria-expanded="false">
+              <span id="countLabel">12 items</span><span class="caret"></span>
+            </button>
+            <ul class="dd-menu" id="countMenu" role="listbox" aria-label="Number of categories">
+              <li role="option" data-value="6" aria-selected="false">6 items</li>
+              <li role="option" data-value="10" aria-selected="false">10 items</li>
+              <li role="option" data-value="12" aria-selected="true">12 items</li>
+              <li role="option" data-value="16" aria-selected="false">16 items</li>
+            </ul>
+          </div>
           <button class="ghost" id="newRound">New round</button>
         </div>
       </div>
@@ -351,7 +381,7 @@ const CATEGORIES = [
 
 /* ---------------- state ---------------- */
 const $ = id => document.getElementById(id);
-let total = 120, left = 120, ticking = false, timer = null, round = 0;
+let total = 120, left = 120, ticking = false, timer = null, round = 0, catCount = 12;
 
 /* ---------------- categories render ---------------- */
 function shuffle(a){
@@ -360,7 +390,7 @@ function shuffle(a){
   return out;
 }
 function drawCategories(){
-  const n = parseInt($("count").value,10);
+  const n = catCount;
   const picked = shuffle(CATEGORIES).slice(0,n);
   $("cats").innerHTML = picked.map((c,i)=>`<li style="--i:${i}"><span>${c}</span></li>`).join("");
   conceal();
@@ -510,11 +540,27 @@ $("secs").addEventListener("change", fromInputs);
 
 $("startBtn").addEventListener("click", toggle);
 $("resetBtn").addEventListener("click", reset);
-$("count").addEventListener("change", ()=>{
+/* custom dropdown for category count */
+const dd = $("countDD");
+function closeDD(){ dd.classList.remove("open"); $("countBtn").setAttribute("aria-expanded","false"); }
+$("countBtn").addEventListener("click", e=>{
+  e.stopPropagation();
+  const open = dd.classList.toggle("open");
+  $("countBtn").setAttribute("aria-expanded", String(open));
+});
+$("countMenu").addEventListener("click", e=>{
+  const li = e.target.closest("li");
+  if(!li) return;
+  catCount = parseInt(li.dataset.value,10);
+  $("countMenu").querySelectorAll("li").forEach(o=>o.setAttribute("aria-selected", String(o === li)));
+  $("countLabel").textContent = li.textContent;
+  closeDD();
   const wasOpen = $("cats").classList.contains("revealed");
   drawCategories();
   if(wasOpen) requestAnimationFrame(reveal);
 });
+document.addEventListener("click", closeDD);
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeDD(); });
 
 function newRound(){
   round++;
