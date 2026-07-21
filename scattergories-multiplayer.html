@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scattergories — Rooms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0B0B; --paper:#FFFFFF; --rule:#D6D6D6; --mute:#767676; --wash:#F2F2F2;
+    --display:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;border-radius:0!important;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--display);line-height:1.45;
+    -webkit-font-smoothing:antialiased;padding:22px;}
+  button,input,select{font:inherit;color:inherit;border-radius:0;}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+
+  .frame{max-width:1080px;margin:0 auto;border:1px solid var(--ink);min-height:calc(100vh - 44px);
+    display:flex;flex-direction:column;}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:20px;
+    padding:20px 30px;border-bottom:1px solid var(--ink);flex-wrap:wrap;}
+  .wordmark{font-size:clamp(24px,4vw,40px);font-weight:900;letter-spacing:-.045em;
+    text-transform:uppercase;margin:0;line-height:1;}
+  .headwrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .headlink{
+    border:1px solid var(--ink);background:var(--paper);color:var(--ink);text-decoration:none;
+    padding:8px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;
+    text-transform:uppercase;white-space:nowrap;
+  }
+  .headlink:hover{background:var(--ink);color:var(--paper);}
+  .meta{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);}
+  main{flex:1;display:flex;flex-direction:column;}
+  .pad{padding:30px;}
+  .label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);
+    display:block;margin-bottom:8px;}
+  h2.sec{margin:0 0 18px;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;}
+
+  input[type=text],input[type=number]{border:1px solid var(--ink);background:var(--paper);
+    padding:11px 12px;font-family:var(--display);font-weight:500;font-size:15px;width:100%;}
+  input[type=text]::placeholder{color:#B0B0B0;}
+  .code-input{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.35em;
+    text-align:center;font-variant-numeric:tabular-nums;padding:14px 0 14px 12px;}
+
+  .btn{border:1px solid var(--ink);background:var(--paper);padding:13px 22px;cursor:pointer;
+    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;}
+  .btn:hover{background:var(--ink);color:var(--paper);}
+  .btn.solid{background:var(--ink);color:var(--paper);}
+  .btn.solid:hover{background:var(--paper);color:var(--ink);}
+  .btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .btn[disabled]:hover{background:var(--paper);color:var(--ink);}
+  .btn.solid[disabled]:hover{background:var(--ink);color:var(--paper);}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;}
+  .split > div{padding:30px;}
+  .split > div:first-child{border-right:1px solid var(--ink);}
+  @media (max-width:760px){
+    .split{grid-template-columns:1fr;}
+    .split > div:first-child{border-right:0;border-bottom:1px solid var(--ink);}
+  }
+
+  .code-display{font-weight:900;font-size:clamp(48px,11vw,86px);letter-spacing:.14em;line-height:1;
+    font-variant-numeric:tabular-nums;margin:6px 0 4px;}
+  .letter-big{font-weight:900;font-size:clamp(64px,13vw,110px);line-height:.9;}
+
+  ul.plain{list-style:none;margin:0;padding:0;}
+  ul.plain li{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:12px 0;border-bottom:1px solid var(--rule);}
+  ul.plain li:last-child{border-bottom:0;}
+  .tagpill{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    border:1px solid var(--ink);padding:3px 7px;}
+  .num{font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;font-size:20px;}
+
+  .clock{font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;
+    font-size:clamp(34px,6vw,52px);line-height:1;}
+  .track{height:4px;background:var(--wash);border:1px solid var(--rule);margin-top:10px;}
+  .fill{height:100%;background:var(--ink);width:100%;transition:width .3s linear;}
+
+  ol.answers{list-style:none;margin:0;padding:0;counter-reset:c;}
+  ol.answers li{counter-increment:c;display:flex;align-items:center;gap:16px;
+    padding:11px 30px;border-bottom:1px solid var(--rule);}
+  ol.answers li::before{content:counter(c);font-weight:600;font-variant-numeric:tabular-nums;
+    color:#3D3D3D;min-width:30px;font-size:15px;}
+  ol.answers .cat{flex:1;font-weight:500;min-width:130px;}
+  ol.answers input{flex:1.1;border:0;border-bottom:1px solid var(--ink);padding:6px 2px;}
+  ol.answers input:focus{outline:none;background:var(--wash);}
+
+  .vote-card{border:1px solid var(--ink);margin-bottom:-1px;}
+  .vote-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+    padding:14px 18px;border-bottom:1px solid var(--ink);background:var(--wash);flex-wrap:wrap;}
+  .vote-cat{font-weight:600;font-size:15px;}
+  .vote-row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--rule);
+    flex-wrap:wrap;}
+  .vote-row:last-child{border-bottom:0;}
+  .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--mute);min-width:110px;}
+  .said{flex:1;font-weight:600;font-size:16px;min-width:120px;}
+  .said.dead{text-decoration:line-through;color:var(--mute);font-weight:500;}
+  .vbtns{display:flex;gap:8px;}
+  .vbtn{border:1px solid var(--ink);background:var(--paper);padding:6px 14px;cursor:pointer;
+    font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;}
+  .vbtn:hover{background:var(--wash);}
+  .vbtn.on{background:var(--ink);color:var(--paper);}
+  .tally{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.08em;min-width:70px;}
+
+  .note{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--mute);line-height:1.7;}
+  .warn{border:1px solid var(--ink);padding:22px;}
+  .warn code{font-family:var(--mono);font-size:12px;background:var(--wash);padding:1px 5px;}
+  .warn pre{font-family:var(--mono);font-size:11.5px;background:var(--wash);padding:14px;overflow:auto;
+    border:1px solid var(--rule);line-height:1.6;}
+  footer{border-top:1px solid var(--ink);padding:14px 30px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.06em;color:var(--mute);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .hide{display:none!important;}
+</style>
+</head>
+<body>
+<div class="frame">
+  <header>
+    <h1 class="wordmark">Scattergories</h1>
+    <span class="headwrap">
+      <a class="headlink" href="scattergories.html">Solo generator</a>
+      <span class="meta" id="hmeta">Multiplayer</span>
+    </span>
+  </header>
+
+  <main>
+    <!-- ============ config missing ============ -->
+    <section id="v-config" class="pad hide">
+      <div class="warn">
+        <h2 class="sec">One-time setup</h2>
+        <p class="note">
+          This page needs a Firebase Realtime Database to pass moves between players.
+          It is free and takes a few minutes.
+        </p>
+        <p class="note">
+          1. Go to console.firebase.google.com and create a project.<br>
+          2. Databases &amp; Storage → Realtime Database → Create database. Pick a region, choose <strong>test mode</strong>.<br>
+          3. Open the Rules tab straight away and publish the rules below — test mode expires after about a month and then blocks everything.<br>
+          4. Gear icon → Project settings → Your apps → Web (&lt;/&gt;) → register, then copy the config values.<br>
+          5. Paste them into the <code>FIREBASE_CONFIG</code> block near the top of this file's script.
+        </p>
+        <p class="note">
+          If <code>databaseURL</code> is missing from the snippet, copy it from the top of the Realtime Database
+          Data tab. Note this is <strong>Realtime Database</strong>, not Firestore.
+        </p>
+        <pre>{
+  "rules": {
+    "rooms": {
+      "$code": { ".read": true, ".write": true }
+    }
+  }
+}</pre>
+      </div>
+    </section>
+
+    <!-- ============ home ============ -->
+    <section id="v-home" class="split hide">
+      <div>
+        <h2 class="sec">Create a room</h2>
+        <label class="label" for="nameA">Your name</label>
+        <input type="text" id="nameA" maxlength="14" placeholder="Name">
+        <div class="row" style="margin-top:18px">
+          <button class="btn solid" id="createBtn">Create room</button>
+        </div>
+        <p class="note" style="margin-top:20px">
+          You will get a four digit code. Everyone types that code to join.
+        </p>
+      </div>
+      <div>
+        <h2 class="sec">Join a room</h2>
+        <label class="label" for="nameB">Your name</label>
+        <input type="text" id="nameB" maxlength="14" placeholder="Name">
+        <label class="label" for="codeIn" style="margin-top:16px">Room code</label>
+        <input type="text" id="codeIn" class="code-input" maxlength="4" inputmode="numeric" placeholder="0000">
+        <div class="row" style="margin-top:18px">
+          <button class="btn" id="joinBtn">Join</button>
+        </div>
+        <p class="note" id="joinErr" style="margin-top:16px"></p>
+      </div>
+    </section>
+
+    <!-- ============ lobby ============ -->
+    <section id="v-lobby" class="split hide">
+      <div>
+        <span class="label">Room code</span>
+        <div class="code-display" id="lobbyCode">0000</div>
+        <p class="note">Share this with your friends.</p>
+
+        <h2 class="sec" style="margin-top:28px">Settings</h2>
+        <div id="hostSettings">
+          <label class="label" for="setSeconds">Seconds per round</label>
+          <input type="number" id="setSeconds" min="15" max="600" step="5" value="120">
+          <label class="label" for="setRounds" style="margin-top:14px">Rounds</label>
+          <input type="number" id="setRounds" min="1" max="10" value="3">
+          <label class="label" for="setCats" style="margin-top:14px">Categories per round</label>
+          <input type="number" id="setCats" min="4" max="16" value="10">
+          <div class="row" style="margin-top:20px">
+            <button class="btn solid" id="startBtn">Start game</button>
+          </div>
+          <p class="note" style="margin-top:14px" id="startNote"></p>
+        </div>
+        <p class="note hide" id="waitNote">Waiting for the host to start.</p>
+      </div>
+      <div>
+        <h2 class="sec">Players</h2>
+        <ul class="plain" id="lobbyPlayers"></ul>
+      </div>
+    </section>
+
+    <!-- ============ playing ============ -->
+    <section id="v-play" class="hide">
+      <div class="split" style="border-bottom:1px solid var(--ink)">
+        <div>
+          <span class="label">Letter</span>
+          <div class="letter-big" id="playLetter">A</div>
+        </div>
+        <div>
+          <span class="label"><span id="roundLabel">Round 1</span></span>
+          <div class="clock" id="playClock">2:00</div>
+          <div class="track"><div class="fill" id="playFill"></div></div>
+          <div class="row" style="margin-top:18px">
+            <button class="btn solid" id="doneBtn">I'm done</button>
+          </div>
+          <p class="note" style="margin-top:12px" id="submitNote"></p>
+        </div>
+      </div>
+      <ol class="answers" id="answerList"></ol>
+    </section>
+
+    <!-- ============ voting ============ -->
+    <section id="v-vote" class="pad hide">
+      <h2 class="sec">Voting — <span id="voteRound">Round 1</span></h2>
+      <p class="note" style="margin-bottom:18px">
+        Matching answers cancel each other out and score nothing. Vote on the rest.
+      </p>
+      <div id="voteCards"></div>
+      <div class="row" style="margin-top:24px">
+        <button class="btn solid hide" id="tallyBtn">Finish voting</button>
+      </div>
+      <p class="note" style="margin-top:14px" id="voteNote"></p>
+    </section>
+
+    <!-- ============ scores ============ -->
+    <section id="v-scores" class="pad hide">
+      <h2 class="sec" id="scoreTitle">Scores</h2>
+      <ul class="plain" id="scoreList" style="max-width:520px"></ul>
+      <div class="row" style="margin-top:26px">
+        <button class="btn solid hide" id="nextBtn">Next round</button>
+        <button class="btn hide" id="againBtn">Play again</button>
+      </div>
+      <p class="note" style="margin-top:14px" id="scoreNote"></p>
+    </section>
+  </main>
+
+  <footer>
+    <span id="footLeft">Not connected</span>
+    <span>Duplicate answers score nothing</span>
+  </footer>
+</div>
+
+<script type="module">
+/* ================================================================
+   PASTE YOUR FIREBASE CONFIG HERE
+   ================================================================ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyCrLWdENV3wC43jty53S-5cTjQg52qZTvU",
+  authDomain:        "scattegories-a2a8e.firebaseapp.com",
+  databaseURL:       "https://scattegories-a2a8e-default-rtdb.firebaseio.com",
+  projectId:         "scattegories-a2a8e",
+  storageBucket:     "scattegories-a2a8e.firebasestorage.app",
+  messagingSenderId: "1015102505999",
+  appId:             "1:1015102505999:web:711d104bc3371d366e8f7a"
+};
+/* ================================================================ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const $ = id => document.getElementById(id);
+const LETTERS = "ABCDEFGHIJKLMNOPRSTW".split("");
+const CATEGORIES = [
+  "Action words","Animals","Bands and musical groups","Board game pieces",
+  "Bodies of water","Book titles","Boys' names","Breakfast foods",
+  "Card and board games","Cars and car brands","Cartoon characters","Cities around the world",
+  "Colors","Countries","Excuses for missing work","Famous duos",
+  "Famous landmarks","Farm animals","Flowers","Foods",
+  "Fruits","Girls' names","Halloween costumes","Historical figures",
+  "Household chores","Ice cream flavors","Insects","Items in a suitcase",
+  "Kinds of birds","Kinds of pain","Kinds of stores","Kitchen appliances",
+  "Last names","Magazines and newspapers","Movie titles","Musical instruments",
+  "Nicknames","Occupations","Ocean creatures","Parts of the body",
+  "Pet names","Reasons to be late","Reasons to call a friend","Reasons to leave a party early",
+  "Reasons to smile","Restaurant names","Sandwich fillings","School subjects",
+  "School supplies","Something in a junk drawer","Something people are allergic to","Something you can't buy",
+  "Something you charge","Something you collect","Something you do before bed","Something you do in the car",
+  "Something you do in the morning","Something you do standing up","Something you fold","Something you inherited",
+  "Something you keep hidden","Something you rent","Something you replace","Something you'd find in a car",
+  "Something you'd find under a bed","Something you'd take camping","Something you'd take on a plane","Something you're afraid of",
+  "Song titles","Sports","Sports equipment","Store names",
+  "Streets and street names","TV shows","Terms of endearment","Things at a beach",
+  "Things at a campsite","Things at a circus","Things at a construction site","Things at a farmers market",
+  "Things at a gas station","Things at a hardware store","Things at a library","Things at a picnic",
+  "Things at a supermarket","Things at a wedding","Things at a zoo","Things at an airport",
+  "Things in a barn","Things in a bathroom","Things in a city","Things in a classroom",
+  "Things in a desk drawer","Things in a diner","Things in a first aid kit","Things in a fridge",
+  "Things in a garage","Things in a garden","Things in a gym","Things in a hospital",
+  "Things in a hospital room","Things in a hotel room","Things in a kitchen","Things in a lunchbox",
+  "Things in a museum","Things in a park","Things in a purse","Things in a toolbox",
+  "Things in a wallet","Things in an office","Things in the sky","Things made of metal",
+  "Things that are cold","Things that are free","Things that are loud","Things that are man-made",
+  "Things that are noisy","Things that are round","Things that are sharp","Things that are soft",
+  "Things that are sticky","Things that come in a box","Things that come in pairs","Things that fly",
+  "Things that grow","Things that melt","Things that smell good","Things with a screen",
+  "Things you buy for a new home","Things you can climb","Things you can hold in one hand","Things you can pour",
+  "Things you can throw","Things you can wash","Things you do at a party","Things you do at school",
+  "Things you do at the beach","Things you do with your hands","Things you find in a forest","Things you find in a pocket",
+  "Things you find in a school","Things you find on a map","Things you plug in","Things you save up for",
+  "Things you shout","Things you wear","Tools","Trees and plants",
+  "Types of bread","Types of candy","Types of dance","Types of drink",
+  "Types of fabric","Types of parties","Types of sandwiches","Types of shoes",
+  "Types of soup","Types of stores at a mall","Types of weather","U.S. cities",
+  "Vegetables","Video games","Ways to get around","Weather words",
+  "Words in a fairy tale","Words in a love song","Words in a newspaper headline","Words on a menu",
+  "Words shouted at a game","Words that describe a house","Words that describe a person","Words that describe food",
+  "Words that describe music","Words that end in -ing","Words that rhyme with each other","Words used at work",
+  "Words used in cooking","Words used in sports","Words with double letters","Words you'd hear on the news"
+];
+
+/* ---------- local identity (resets on refresh, by design) ---------- */
+const me = "p" + Math.random().toString(36).slice(2, 9);
+let myName = "";
+let code = null, room = null, db = null, roomRef = null, unsub = null;
+let clockTimer = null, lastPhase = null, tallied = false;
+
+/* ---------- setup ---------- */
+if(!FIREBASE_CONFIG.databaseURL){
+  show("v-config");
+} else {
+  db = getDatabase(initializeApp(FIREBASE_CONFIG));
+  $("footLeft").textContent = "Connected";
+  show("v-home");
+}
+
+function show(id){
+  ["v-config","v-home","v-lobby","v-play","v-vote","v-scores"]
+    .forEach(v => $(v).classList.toggle("hide", v !== id));
+}
+function norm(s){
+  return (s || "").toLowerCase().trim()
+    .replace(/^(a|an|the)\s+/, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+function shuffle(a){
+  const o = a.slice();
+  for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}
+  return o;
+}
+const isHost = () => room && room.hostId === me;
+const playerIds = () => Object.keys((room && room.players) || {});
+
+/* ---------- create / join ---------- */
+$("createBtn").addEventListener("click", async ()=>{
+  myName = ($("nameA").value || "").trim();
+  if(!myName) return $("nameA").focus();
+  let c;
+  for(let tries=0;;tries++){
+    c = String(Math.floor(1000 + Math.random()*9000));
+    const snap = await get(ref(db, "rooms/" + c));
+    if(!snap.exists()) break;
+    if(tries > 25) return alert("Could not find a free room code, try again.");
+  }
+  await set(ref(db, "rooms/" + c), {
+    hostId: me, phase: "lobby", round: 0,
+    seconds: 120, rounds: 3, catCount: 10,
+    createdAt: serverTimestamp(),
+    players: { [me]: { name: myName, score: 0 } }
+  });
+  attach(c);
+});
+
+$("joinBtn").addEventListener("click", async ()=>{
+  myName = ($("nameB").value || "").trim();
+  const c = ($("codeIn").value || "").trim();
+  $("joinErr").textContent = "";
+  if(!myName) return $("nameB").focus();
+  if(!/^\d{4}$/.test(c)) { $("joinErr").textContent = "Enter the four digit code."; return; }
+  const snap = await get(ref(db, "rooms/" + c));
+  if(!snap.exists()){ $("joinErr").textContent = "No room with that code."; return; }
+  if(snap.val().phase !== "lobby"){ $("joinErr").textContent = "That game already started."; return; }
+  await update(ref(db, `rooms/${c}/players/${me}`), { name: myName, score: 0 });
+  attach(c);
+});
+
+function attach(c){
+  code = c;
+  roomRef = ref(db, "rooms/" + c);
+  onDisconnect(ref(db, `rooms/${c}/players/${me}`)).remove();
+  $("footLeft").textContent = "Room " + c;
+  if(unsub) unsub();
+  unsub = onValue(roomRef, snap=>{
+    room = snap.val();
+    if(!room){ alert("The room was closed."); location.reload(); return; }
+    render();
+  });
+}
+
+/* ---------- host: settings + start ---------- */
+["setSeconds","setRounds","setCats"].forEach(id=>{
+  $(id).addEventListener("change", ()=>{
+    if(!isHost()) return;
+    update(roomRef, {
+      seconds: clamp(+$("setSeconds").value, 15, 600),
+      rounds:  clamp(+$("setRounds").value, 1, 10),
+      catCount:clamp(+$("setCats").value, 4, 16)
+    });
+  });
+});
+const clamp = (v,a,b) => Math.max(a, Math.min(b, isNaN(v) ? a : v));
+
+$("startBtn").addEventListener("click", ()=>{ if(isHost()) startRound(1); });
+$("nextBtn").addEventListener("click", ()=>{ if(isHost()) startRound(room.round + 1); });
+$("againBtn").addEventListener("click", async ()=>{
+  if(!isHost()) return;
+  const reset = {};
+  playerIds().forEach(p => reset[`players/${p}/score`] = 0);
+  await update(roomRef, Object.assign(reset, {
+    phase:"lobby", round:0, answers:null, submitted:null, votes:null, dupes:null,
+    letter:null, categories:null, startedAt:null
+  }));
+});
+
+function startRound(n){
+  const letter = LETTERS[Math.floor(Math.random()*LETTERS.length)];
+  const cats = shuffle(CATEGORIES).slice(0, room.catCount);
+  update(roomRef, {
+    phase: "playing", round: n, letter, categories: cats,
+    startedAt: serverTimestamp(), voteIndex: 0
+  });
+}
+
+/* ---------- playing ---------- */
+$("doneBtn").addEventListener("click", submitMine);
+
+function submitMine(){
+  if(!room || room.phase !== "playing") return;
+  const vals = {};
+  [...document.querySelectorAll("#answerList input")].forEach((inp,i)=>{
+    const v = inp.value.trim();
+    if(v) vals[i] = v;
+  });
+  update(roomRef, {
+    [`answers/${room.round}/${me}`]: vals,
+    [`submitted/${room.round}/${me}`]: true
+  });
+  $("doneBtn").disabled = true;
+  $("submitNote").textContent = "Submitted. Waiting for everyone else.";
+}
+
+function buildAnswerInputs(){
+  $("answerList").innerHTML = room.categories.map(c=>
+    `<li><span class="cat">${escapeHtml(c)}</span><input type="text" maxlength="40" autocomplete="off"></li>`
+  ).join("");
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+
+function tickClock(){
+  if(!room || room.phase !== "playing" || !room.startedAt) return;
+  const total = room.seconds;
+  const gone = Math.floor((Date.now() - room.startedAt) / 1000);
+  const left = Math.max(0, total - gone);
+  $("playClock").textContent = Math.floor(left/60) + ":" + String(left%60).padStart(2,"0");
+  $("playFill").style.width = (left/total*100) + "%";
+  if(left === 0){
+    if(!$("doneBtn").disabled) submitMine();
+    if(isHost()) toVoting();
+  }
+}
+
+function allSubmitted(){
+  const sub = (room.submitted && room.submitted[room.round]) || {};
+  return playerIds().every(p => sub[p]);
+}
+
+/* ---------- voting ---------- */
+function toVoting(){
+  if(room.phase !== "playing") return;
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const dupes = {};
+  room.categories.forEach((cat, ci)=>{
+    const seen = {};
+    playerIds().forEach(p=>{
+      const raw = (answers[p] && answers[p][ci]) || "";
+      const key = norm(raw);
+      if(!key) return;
+      (seen[key] = seen[key] || []).push(p);
+    });
+    const flagged = [];
+    Object.values(seen).forEach(list => { if(list.length > 1) flagged.push(...list); });
+    if(flagged.length) dupes[ci] = flagged;
+  });
+  update(roomRef, { phase:"voting", [`dupes/${room.round}`]: dupes });
+}
+
+function validStart(raw){
+  return norm(raw).charAt(0) === room.letter.toLowerCase();
+}
+
+function renderVoting(){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const dupes = (room.dupes && room.dupes[room.round]) || {};
+  const votes = (room.votes && room.votes[room.round]) || {};
+  const players = room.players || {};
+
+  $("voteRound").textContent = "Round " + room.round;
+  $("voteCards").innerHTML = room.categories.map((cat, ci)=>{
+    const dup = dupes[ci] || [];
+    const rows = playerIds().map(p=>{
+      const raw = (answers[p] && answers[p][ci]) || "";
+      const isDup = dup.includes(p);
+      const blank = !raw.trim();
+      const wrong = raw.trim() && !validStart(raw);
+      const dead = blank || isDup || wrong;
+      const cast = (votes[ci] && votes[ci][p]) || {};
+      const yes = Object.values(cast).filter(v => v === true).length;
+      const no  = Object.values(cast).filter(v => v === false).length;
+      const mine = cast[me];
+
+      let text = blank ? "(no answer)" : escapeHtml(raw);
+      let why = "";
+      if(blank) why = "blank";
+      else if(isDup) why = "duplicate";
+      else if(wrong) why = "wrong letter";
+
+      const buttons = (dead || p === me) ? "" :
+        `<div class="vbtns">
+           <button class="vbtn ${mine === true ? "on" : ""}" data-ci="${ci}" data-p="${p}" data-v="1">Valid</button>
+           <button class="vbtn ${mine === false ? "on" : ""}" data-ci="${ci}" data-p="${p}" data-v="0">No</button>
+         </div>`;
+      const tally = dead ? `<span class="tally">${why}</span>`
+                         : `<span class="tally">${yes} / ${yes + no}</span>`;
+
+      return `<div class="vote-row">
+                <span class="who">${escapeHtml(players[p] ? players[p].name : "?")}</span>
+                <span class="said ${dead ? "dead" : ""}">${text}</span>
+                ${tally}${buttons}
+              </div>`;
+    }).join("");
+
+    return `<div class="vote-card">
+              <div class="vote-head"><span class="vote-cat">${escapeHtml(cat)}</span>
+              <span class="meta">${room.letter}</span></div>
+              ${rows}
+            </div>`;
+  }).join("");
+
+  $("voteCards").querySelectorAll(".vbtn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      update(roomRef, {
+        [`votes/${room.round}/${b.dataset.ci}/${b.dataset.p}/${me}`]: b.dataset.v === "1"
+      });
+    });
+  });
+
+  $("tallyBtn").classList.toggle("hide", !isHost());
+  $("voteNote").textContent = isHost()
+    ? "Everyone votes, then finish voting to score the round."
+    : "The host will move things along when the votes are in.";
+}
+
+$("tallyBtn").addEventListener("click", ()=>{ if(isHost()) tally(); });
+
+function tally(){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const dupes = (room.dupes && room.dupes[room.round]) || {};
+  const votes = (room.votes && room.votes[room.round]) || {};
+  const gained = {};
+
+  playerIds().forEach(p=>{
+    let pts = 0;
+    room.categories.forEach((cat, ci)=>{
+      const raw = (answers[p] && answers[p][ci]) || "";
+      if(!raw.trim()) return;
+      if((dupes[ci] || []).includes(p)) return;
+      if(!validStart(raw)) return;
+      const cast = (votes[ci] && votes[ci][p]) || {};
+      const yes = Object.values(cast).filter(v => v === true).length;
+      const no  = Object.values(cast).filter(v => v === false).length;
+      if(no > yes) return;          /* majority rejected it */
+      pts++;
+    });
+    gained[p] = pts;
+  });
+
+  const updates = { phase: "scores", [`gained/${room.round}`]: gained };
+  playerIds().forEach(p=>{
+    const cur = (room.players[p] && room.players[p].score) || 0;
+    updates[`players/${p}/score`] = cur + gained[p];
+  });
+  update(roomRef, updates);
+}
+
+/* ---------- scores ---------- */
+function renderScores(){
+  const done = room.round >= room.rounds;
+  const gained = (room.gained && room.gained[room.round]) || {};
+  const rows = playerIds()
+    .map(p => ({ p, name: room.players[p].name, score: room.players[p].score || 0, got: gained[p] || 0 }))
+    .sort((a,b) => b.score - a.score);
+
+  const top = rows.length ? rows[0].score : 0;
+  const winners = rows.filter(r => r.score === top).map(r => r.name);
+
+  $("scoreTitle").textContent = done
+    ? (winners.length > 1 ? "Tied: " + winners.join(" & ") : winners[0] + " wins")
+    : "After round " + room.round;
+
+  $("scoreList").innerHTML = rows.map(r=>
+    `<li><span>${escapeHtml(r.name)}</span>
+     <span><span class="tagpill">+${r.got}</span> <span class="num">${r.score}</span></span></li>`
+  ).join("");
+
+  $("nextBtn").classList.toggle("hide", done || !isHost());
+  $("againBtn").classList.toggle("hide", !done || !isHost());
+  $("scoreNote").textContent = isHost() ? "" : "Waiting for the host.";
+}
+
+/* ---------- render ---------- */
+function render(){
+  /* host left: promote the first remaining player */
+  if(room.hostId && !playerIds().includes(room.hostId) && playerIds()[0] === me){
+    update(roomRef, { hostId: me });
+  }
+  $("hmeta").textContent = code ? "Room " + code + (isHost() ? " · host" : "") : "Multiplayer";
+
+  const phase = room.phase;
+  if(phase === "lobby"){
+    show("v-lobby");
+    $("lobbyCode").textContent = code;
+    $("hostSettings").classList.toggle("hide", !isHost());
+    $("waitNote").classList.toggle("hide", isHost());
+    if(isHost() && document.activeElement.tagName !== "INPUT"){
+      $("setSeconds").value = room.seconds;
+      $("setRounds").value = room.rounds;
+      $("setCats").value = room.catCount;
+    }
+    $("lobbyPlayers").innerHTML = playerIds().map(p=>
+      `<li><span>${escapeHtml(room.players[p].name)}</span>
+       ${p === room.hostId ? '<span class="tagpill">Host</span>' : ""}</li>`).join("");
+    $("startBtn").disabled = playerIds().length < 2;
+    $("startNote").textContent = playerIds().length < 2 ? "Waiting for at least one more player." : "";
+  }
+
+  else if(phase === "playing"){
+    if(lastPhase !== "playing"){
+      show("v-play");
+      buildAnswerInputs();
+      $("doneBtn").disabled = false;
+      $("submitNote").textContent = "";
+      $("playLetter").textContent = room.letter;
+      $("roundLabel").textContent = `Round ${room.round} of ${room.rounds}`;
+      clearInterval(clockTimer);
+      clockTimer = setInterval(tickClock, 250);
+    }
+    const sub = (room.submitted && room.submitted[room.round]) || {};
+    const n = Object.keys(sub).length;
+    if(n && !$("doneBtn").disabled) $("submitNote").textContent = `${n} of ${playerIds().length} finished.`;
+    if(isHost() && allSubmitted()) toVoting();
+    tickClock();
+  }
+
+  else if(phase === "voting"){
+    clearInterval(clockTimer);
+    show("v-vote");
+    renderVoting();
+  }
+
+  else if(phase === "scores"){
+    show("v-scores");
+    renderScores();
+  }
+
+  lastPhase = phase;
+}
+</script>
+</body>
+</html>
