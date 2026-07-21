@@ -632,7 +632,7 @@ $("againBtn").addEventListener("click", async ()=>{
   const reset = {};
   playerIds().forEach(p => reset[`players/${p}/score`] = 0);
   await update(roomRef, Object.assign(reset, {
-    phase:"lobby", round:0, answers:null, submitted:null, votes:null,
+    phase:"lobby", round:0, answers:null, submitted:null, votes:null, results:null, gained:null,
     letter:null, categories:null, startedAt:null
   }));
 });
@@ -930,20 +930,34 @@ $("nextCatBtn").addEventListener("click", ()=>{ if(isHost()) advanceVote(1); });
 $("prevCatBtn").addEventListener("click", ()=>{ if(isHost()) advanceVote(-1); });
 
 function tally(){
-  const answers = (room.answers && room.answers[room.round]) || {};
-  const votes = (room.votes && room.votes[room.round]) || {};
-  const gained = {};
+  const gained = {}, results = {};
 
   roundPlayers().forEach(p=>{
     let pts = 0;
-    room.categories.forEach((cat, ci)=>{ pts += judge(p, ci).points; });
+    const lines = [];
+    room.categories.forEach((cat, ci)=>{
+      const v = judge(p, ci);
+      pts += v.points;
+      lines.push({
+        c: cat, a: v.raw || "", p: v.points,
+        r: v.points ? "" : (v.reason || "No points"), y: v.yes, n: v.no
+      });
+    });
     gained[p] = pts;
+    results[p] = { name: nameOf(p), lines };
   });
 
-  const updates = { phase: "scores", [`gained/${room.round}`]: gained };
+  /* The breakdown is written down here rather than recomputed on each client.
+     Derived-on-render meant it depended on live round data, so it could come
+     out empty or inconsistent depending on what had arrived when. */
+  const updates = {
+    phase: "scores",
+    [`gained/${room.round}`]: gained,
+    [`results/${room.round}`]: results
+  };
   playerIds().forEach(p=>{
     const cur = (room.players[p] && room.players[p].score) || 0;
-    updates[`players/${p}/score`] = cur + gained[p];
+    updates[`players/${p}/score`] = cur + (gained[p] || 0);
   });
   update(roomRef, updates);
 }
@@ -971,29 +985,45 @@ function renderScores(){
        <span class="tot">${r.score}</span>
      </li>`).join("");
 
-  /* every answer from the round just played, and what it was worth */
-  const order = rows.slice().sort((a,b) => (b.p === me) - (a.p === me));
-  $("breakdown").innerHTML = order.map(r=>{
-    const lines = room.categories.map((cat, ci)=>{
-      const v = judge(r.p, ci);
-      const shown = v.raw.trim() ? escapeHtml(v.raw) : "—";
-      const badge = v.points
-        ? `<span class="pts win">+${v.points}</span>`
-        : `<span class="pts loss">${v.reason || "No points"}</span>`;
-      return `<div class="bd-row">
-                <span class="bd-cat">${escapeHtml(cat)}</span>
-                <span class="bd-ans ${v.points ? "" : "out"}">${shown}</span>
-                ${badge}
+  /* Read the stored result. Falls back to computing it if an older round is
+     being shown, and never lets one bad row wipe out the whole section. */
+  const stored = (room.results && room.results[room.round]) || null;
+  const ids = stored ? Object.keys(stored) : rows.map(r => r.p);
+  const order = ids.slice().sort((a,b) => (b === me) - (a === me));
+
+  try {
+    $("breakdown").innerHTML = order.map(pid=>{
+      const rec = stored && stored[pid];
+      const lines = rec && rec.lines
+        ? rec.lines
+        : (room.categories || []).map((cat, ci)=>{
+            const v = judge(pid, ci);
+            return { c: cat, a: v.raw, p: v.points, r: v.points ? "" : v.reason };
+          });
+      const html = lines.map(L=>{
+        const shown = (L.a || "").trim() ? escapeHtml(L.a) : "&mdash;";
+        const badge = L.p
+          ? `<span class="pts win">+${L.p}</span>`
+          : `<span class="pts loss">${escapeHtml(L.r || "No points")}</span>`;
+        return `<div class="bd-row">
+                  <span class="bd-cat">${escapeHtml(L.c || "")}</span>
+                  <span class="bd-ans ${L.p ? "" : "out"}">${shown}</span>
+                  ${badge}
+                </div>`;
+      }).join("");
+      const scored = lines.filter(L => L.p).length;
+      const who = (rec && rec.name) || nameOf(pid);
+      const got = (gained[pid] != null) ? gained[pid] : lines.reduce((a,L)=>a+(L.p||0),0);
+      return `<div class="bd">
+                <div class="bd-head">
+                  <span class="who2">${escapeHtml(who)}${pid === me ? " (you)" : ""}</span>
+                  <span class="sum">${scored} of ${lines.length} scored &middot; +${got}</span>
+                </div>${html}
               </div>`;
     }).join("");
-    const scored = room.categories.filter((c,ci)=> judge(r.p, ci).points).length;
-    return `<div class="bd">
-              <div class="bd-head">
-                <span class="who2">${escapeHtml(r.name)}${r.p === me ? " (you)" : ""}</span>
-                <span class="sum">${scored} of ${room.categories.length} scored · +${r.got}</span>
-              </div>${lines}
-            </div>`;
-  }).join("");
+  } catch(err){
+    $("breakdown").innerHTML = '<p class="note">Could not build the breakdown for this round.</p>';
+  }
 
   $("nextBtn").classList.toggle("hide", done || !isHost());
   $("againBtn").classList.toggle("hide", !done || !isHost());
