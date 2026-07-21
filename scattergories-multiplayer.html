@@ -132,6 +132,14 @@
   .cd{
     position:fixed;inset:0;background:var(--ink);color:var(--paper);z-index:60;
     display:flex;align-items:center;justify-content:center;text-align:center;
+    opacity:1;transition:opacity .5s ease;
+  }
+  .cd.out{opacity:0;pointer-events:none;}
+  .fadein{animation:fadeIn .5s ease both;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){
+    .cd{transition:none;}
+    .fadein{animation:none;}
   }
   .cd-round{
     font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
@@ -158,7 +166,7 @@
   <header>
     <h1 class="wordmark">Scattergories</h1>
     <span class="headwrap">
-      <a class="headlink" href="index.html">Solo generator</a>
+      <a class="headlink" href="scattergories.html">Solo generator</a>
       <button class="headlink hide" id="leaveBtn">Leave room</button>
       <span class="meta" id="hmeta">Multiplayer</span>
     </span>
@@ -263,6 +271,7 @@
           <div class="track"><div class="fill" id="playFill"></div></div>
           <div class="row" style="margin-top:18px">
             <button class="btn solid" id="doneBtn">I'm done</button>
+            <button class="btn" id="pauseBtn">Pause</button>
           </div>
           <p class="note" style="margin-top:12px" id="submitNote"></p>
         </div>
@@ -307,6 +316,25 @@
     <span id="footLeft">Not connected</span>
     <span>Duplicate answers score nothing</span>
   </footer>
+</div>
+
+<div id="voteIntro" class="cd hide" style="z-index:58">
+  <div>
+    <span class="cd-round" id="voteIntroRound">Round 1</span>
+    <div class="cd-num go">Voting</div>
+    <span class="cd-round" style="margin:18px 0 0">Time is up — decide what counts</span>
+  </div>
+</div>
+
+<div id="pauseOv" class="cd hide" style="z-index:55">
+  <div>
+    <span class="cd-round" id="pauseWho">Paused</span>
+    <div class="cd-num go">Paused</div>
+    <div class="row" style="justify-content:center;margin-top:26px">
+      <button class="btn solid" id="resumeBtn" style="background:var(--paper);color:var(--ink)">Resume</button>
+    </div>
+    <span class="cd-round hide" id="pauseHint" style="margin-top:22px">Waiting for the host to resume</span>
+  </div>
 </div>
 
 <div id="cd" class="cd hide">
@@ -391,6 +419,7 @@ let myName = "";
 let code = null, room = null, db = null, roomRef = null, unsub = null;
 let clockTimer = null, lastPhase = null, tallied = false;
 let autoTimer = null, lastAuto = null, cdTimer = null, endTimer = null;
+let introTimer = null, introTimer2 = null;
 
 /* ---------- setup ---------- */
 if(!FIREBASE_CONFIG.databaseURL){
@@ -494,25 +523,24 @@ function startRound(n){
   const cats = shuffle(CATEGORIES).slice(0, room.catCount);
   update(roomRef, {
     phase: "countdown", round: n, letter, categories: cats,
-    countdownAt: serverTimestamp(), startedAt: null, voteIndex: 0
+    countdownAt: serverTimestamp(), startedAt: null, voteIndex: 0,
+    roundTotal: room.seconds, roundLeft: room.seconds, paused: false, pausedBy: null
   });
 }
 
 const CD_SECONDS = 3;
 function tickCountdown(){
   if(!room || room.phase !== "countdown" || !room.countdownAt) return;
-  const gone = (Date.now() - room.countdownAt) / 1000;
-  const left = CD_SECONDS - gone;
+  const left = CD_SECONDS - (Date.now() - room.countdownAt) / 1000;
   $("cdRound").textContent = `Round ${room.round} of ${room.rounds}`;
-  if(left > 0){
-    $("cdNum").textContent = Math.ceil(left);
-    $("cdNum").classList.remove("go");
-  } else {
-    $("cdNum").textContent = "Go";
-    $("cdNum").classList.add("go");
-    if(isHost() && left < -0.4){
+  $("cdNum").textContent = Math.max(1, Math.ceil(left));
+  if(left <= 0){
+    $("cd").classList.add("out");           /* fade away rather than cut */
+    if(isHost() && left < -0.5){
       update(roomRef, { phase: "playing", startedAt: serverTimestamp() });
     }
+  } else {
+    $("cd").classList.remove("out");
   }
 }
 
@@ -543,13 +571,20 @@ function escapeHtml(s){
   return s.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
 
+function secondsLeft(){
+  if(!room) return 0;
+  const segment = room.roundLeft != null ? room.roundLeft : room.seconds;
+  if(room.paused || !room.startedAt) return segment;
+  return Math.max(0, segment - Math.floor((Date.now() - room.startedAt) / 1000));
+}
+
 function tickClock(){
-  if(!room || room.phase !== "playing" || !room.startedAt) return;
-  const total = room.seconds;
-  const gone = Math.floor((Date.now() - room.startedAt) / 1000);
-  const left = Math.max(0, total - gone);
+  if(!room || room.phase !== "playing") return;
+  const total = room.roundTotal || room.seconds;
+  const left = secondsLeft();
   $("playClock").textContent = Math.floor(left/60) + ":" + String(left%60).padStart(2,"0");
   $("playFill").style.width = (left/total*100) + "%";
+  if(room.paused) return;
   if(left === 0){
     if(!$("doneBtn").disabled) submitMine();
     /* brief grace so the final writes land before anyone sees the answers */
@@ -561,6 +596,22 @@ function tickClock(){
     }
   }
 }
+
+/* Only the host can pause or resume, so the round can't be stopped mid-thought
+   by anyone else. The remaining time is banked so the clock resumes exactly. */
+$("pauseBtn").addEventListener("click", ()=>{
+  if(!room || !isHost() || room.phase !== "playing" || room.paused) return;
+  clearTimeout(endTimer); endTimer = null;
+  update(roomRef, {
+    paused: true,
+    roundLeft: secondsLeft(),
+    pausedBy: (room.players[me] && room.players[me].name) || "the host"
+  });
+});
+$("resumeBtn").addEventListener("click", ()=>{
+  if(!room || !isHost() || !room.paused) return;
+  update(roomRef, { paused: false, startedAt: serverTimestamp() });
+});
 
 function allSubmitted(){
   const sub = (room.submitted && room.submitted[room.round]) || {};
@@ -768,7 +819,10 @@ async function leaveRoom(){
 
   /* stop listening first so the removal doesn't re-render a half-gone room */
   if(unsub){ unsub(); unsub = null; }
-  clearInterval(clockTimer); clearTimeout(autoTimer); clearTimeout(endTimer); endTimer = null;
+  clearInterval(clockTimer); clearInterval(cdTimer);
+  clearTimeout(autoTimer); clearTimeout(endTimer); endTimer = null;
+  clearTimeout(introTimer); clearTimeout(introTimer2);
+  ["cd","pauseOv","voteIntro"].forEach(i => $(i).classList.add("hide"));
 
   try{
     await onDisconnect(ref(db, `rooms/${c}/players/${me}`)).cancel();
@@ -788,6 +842,17 @@ async function leaveRoom(){
 $("leaveBtn").addEventListener("click", leaveRoom);
 $("leaveBtn2").addEventListener("click", leaveRoom);
 
+function playVoteIntro(){
+  const el = $("voteIntro");
+  $("voteIntroRound").textContent = `Round ${room.round} of ${room.rounds}`;
+  clearTimeout(introTimer); clearTimeout(introTimer2);
+  el.classList.remove("hide", "out");
+  introTimer  = setTimeout(()=> el.classList.add("out"), 1700);
+  introTimer2 = setTimeout(()=>{ el.classList.add("hide");
+    $("v-vote").classList.remove("fadein"); void $("v-vote").offsetWidth;
+    $("v-vote").classList.add("fadein"); }, 2200);
+}
+
 /* ---------- render ---------- */
 function render(){
   /* host left: promote the first remaining player */
@@ -799,6 +864,7 @@ function render(){
 
   const phase = room.phase;
   $("cd").classList.toggle("hide", phase !== "countdown");
+  if(phase !== "countdown") $("cd").classList.remove("out");
 
   if(phase === "countdown"){
     if(lastPhase !== "countdown"){
@@ -831,6 +897,8 @@ function render(){
   else if(phase === "playing"){
     if(lastPhase !== "playing"){
       show("v-play");
+      $("v-play").classList.remove("fadein"); void $("v-play").offsetWidth;
+      $("v-play").classList.add("fadein");
       buildAnswerInputs();
       $("doneBtn").disabled = false;
       $("submitNote").textContent = "";
@@ -842,7 +910,17 @@ function render(){
     const sub = (room.submitted && room.submitted[room.round]) || {};
     const n = Object.keys(sub).length;
     if(n && !$("doneBtn").disabled) $("submitNote").textContent = `${n} of ${playerIds().length} finished.`;
-    if(isHost() && allSubmitted() && !endTimer){
+
+    const paused = !!room.paused;
+    $("pauseBtn").classList.toggle("hide", !isHost());
+    $("pauseOv").classList.toggle("hide", !paused);
+    $("pauseWho").textContent = paused ? `Paused by ${room.pausedBy || "the host"}` : "";
+    $("resumeBtn").classList.toggle("hide", !isHost());
+    $("pauseHint").classList.toggle("hide", isHost());
+    $("pauseBtn").disabled = paused;
+    document.querySelectorAll("#answerList input").forEach(i => i.disabled = paused);
+
+    if(!paused && isHost() && allSubmitted() && !endTimer){
       endTimer = setTimeout(()=>{ endTimer = null;
         if(room && room.phase === "playing") toVoting(); }, 400);
     }
@@ -851,6 +929,8 @@ function render(){
 
   else if(phase === "voting"){
     clearInterval(clockTimer);
+    $("pauseOv").classList.add("hide");
+    if(lastPhase !== "voting") playVoteIntro();
     show("v-vote");
     renderVoting();
   }
