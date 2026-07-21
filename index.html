@@ -42,6 +42,12 @@
     display:flex;align-items:baseline;justify-content:space-between;gap:24px;
     padding:clamp(14px,2.2vh,26px) 34px;border-bottom:1px solid var(--ink);flex-shrink:0;
   }
+  .headlink{
+    border:1px solid var(--ink);background:var(--paper);color:var(--ink);text-decoration:none;
+    padding:8px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;
+    text-transform:uppercase;white-space:nowrap;
+  }
+  .headlink:hover{background:var(--ink);color:var(--paper);}
   .wordmark{
     font-size:clamp(26px,4.6vh,54px);font-weight:900;letter-spacing:-.045em;
     text-transform:uppercase;margin:0;line-height:1;
@@ -264,6 +270,7 @@
 
   <header>
     <h1 class="wordmark">Scattergories</h1>
+    <a class="headlink" href="scattergories-multiplayer.html">Play with friends</a>
   </header>
 
   <div class="board">
