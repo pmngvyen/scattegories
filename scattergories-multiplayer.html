@@ -111,7 +111,7 @@
   .vote-row:first-of-type{border-top:1px solid var(--ink);}
   .who{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
     color:var(--mute);min-width:120px;}
-  .said{flex:1;font-weight:700;font-size:clamp(18px,2.6vw,26px);min-width:150px;letter-spacing:-.01em;}
+  .said{flex:1;font-weight:700;font-size:clamp(18px,2.6vw,26px);min-width:170px;letter-spacing:-.01em;padding:6px 0;}
   .said.dead{text-decoration:line-through;color:var(--mute);font-weight:500;}
   .vbtns{display:flex;gap:10px;}
   .vbtn{border:1px solid var(--ink);background:var(--paper);padding:14px 30px;cursor:pointer;
@@ -157,6 +157,31 @@
   }
   .verdict.ok{background:var(--ink);color:var(--paper);border-color:var(--ink);}
   .verdict.no{background:var(--paper);color:var(--mute);}
+
+  /* verdict stamps land on top of the answer */
+  .said{position:relative;}
+  .stamp{
+    position:absolute;left:50%;top:50%;z-index:2;
+    transform:translate(-50%,-50%) rotate(-7deg);
+    font-weight:900;font-size:clamp(15px,2vw,21px);letter-spacing:.06em;text-transform:uppercase;
+    padding:5px 16px;border:3px solid currentColor;white-space:nowrap;
+    background:var(--paper);
+  }
+  .stamp .n{font-weight:700;font-size:.72em;letter-spacing:.02em;opacity:.85;margin-left:7px;}
+  .stamp.yes{color:#14874A;box-shadow:0 0 0 2px var(--paper);}
+  .stamp.nope{color:#CB2020;box-shadow:0 0 0 2px var(--paper);}
+  .stamp.slam{animation:slam .38s cubic-bezier(.2,1.5,.4,1) both;}
+  @keyframes slam{
+    0%{transform:translate(-50%,-50%) rotate(-16deg) scale(3);opacity:0;}
+    55%{opacity:1;}
+    70%{transform:translate(-50%,-50%) rotate(-7deg) scale(.9);}
+    85%{transform:translate(-50%,-50%) rotate(-7deg) scale(1.07);}
+    100%{transform:translate(-50%,-50%) rotate(-7deg) scale(1);opacity:1;}
+  }
+  .said.stamped .txt{opacity:.4;}
+  .vbtn.on.yes{background:#14874A;border-color:#14874A;color:#fff;}
+  .vbtn.on.nope{background:#CB2020;border-color:#CB2020;color:#fff;}
+  @media (prefers-reduced-motion:reduce){ .stamp.slam{animation:none;} }
 
   .hide{display:none!important;}
 </style>
@@ -420,6 +445,7 @@ let code = null, room = null, db = null, roomRef = null, unsub = null;
 let clockTimer = null, lastPhase = null, tallied = false;
 let autoTimer = null, lastAuto = null, cdTimer = null, endTimer = null;
 let introTimer = null, introTimer2 = null;
+const stampSeen = new Set();
 
 /* ---------- setup ---------- */
 if(!FIREBASE_CONFIG.databaseURL){
@@ -676,28 +702,37 @@ function renderVoting(){
     const why = blank ? "No answer" : isDup ? "Duplicate" : wrong ? "Wrong letter" : "";
     const text = blank ? "—" : escapeHtml(raw);
     const rejected = !dead && settled && no > yes;
-    const struck = dead || rejected;
 
-    let right;
-    if(dead){
-      right = `<span class="verdict no">${why}</span>`;
-    } else if(settled){
-      right = rejected
-        ? `<span class="verdict no">Rejected ${yes}–${no}</span>`
-        : `<span class="verdict ok">Valid ${yes}–${no}</span>`;
-    } else {
-      right = `<span class="tally">${yes} of ${yes + no}</span>`;
+    /* work out the stamp, if this answer has been decided */
+    let stamp = "", label = "";
+    if(dead && !blank){ stamp = "nope"; label = why; }
+    else if(settled && !dead){
+      stamp = rejected ? "nope" : "yes";
+      label = (rejected ? "Rejected" : "Valid") + `<span class="n">${yes}–${no}</span>`;
     }
+
+    /* only animate the first time a given verdict appears */
+    let slam = "";
+    if(stamp){
+      const key = `${room.round}:${ci}:${p}:${stamp}:${label}`;
+      if(!stampSeen.has(key)){ stampSeen.add(key); slam = " slam"; }
+    }
+
+    const stampHtml = stamp
+      ? `<span class="stamp ${stamp}${slam}">${label}</span>` : "";
+    const right = (!stamp && !dead)
+      ? `<span class="tally">${yes} of ${yes + no}</span>`
+      : (blank ? `<span class="tally">${why}</span>` : "");
 
     const buttons = dead ? "" :
       `<div class="vbtns">
-         <button class="vbtn ${mine === true ? "on" : ""}" data-p="${p}" data-v="1">Valid</button>
-         <button class="vbtn ${mine === false ? "on" : ""}" data-p="${p}" data-v="0">No</button>
+         <button class="vbtn ${mine === true ? "on yes" : ""}" data-p="${p}" data-v="1">Valid</button>
+         <button class="vbtn ${mine === false ? "on nope" : ""}" data-p="${p}" data-v="0">No</button>
        </div>`;
 
     return `<div class="vote-row">
               <span class="who">${escapeHtml(players[p] ? players[p].name : "?")}${p === me ? " (you)" : ""}</span>
-              <span class="said ${struck ? "dead" : ""}">${text}</span>
+              <span class="said ${stamp ? "stamped" : ""}"><span class="txt">${text}</span>${stampHtml}</span>
               ${right}${buttons}
             </div>`;
   }).join("");
