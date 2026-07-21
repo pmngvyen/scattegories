@@ -393,6 +393,59 @@ const CATEGORIES = [
 "Something you'd find in space","Rooms in a house","Things you can share","Bands and musical groups","Things at a garage sale"
 ];
 
+/* ---------------- answer library ---------------- */
+const LETTER_ORDER = "ABCDEFGHIJKLMNOPRSTW";
+/* ANSWERS-START */
+const ANSWERS = {
+"Things in a kitchen":"apron|blender|colander|dishwasher|egg timer|fridge|grater|hot plate|ice maker|juicer|kettle|ladle|microwave|napkins|oven|pot|rolling pin|spatula|toaster|whisk",
+"Boys' names":"Aaron|Ben|Carl|David|Ethan|Frank|George|Henry|Ian|Jacob|Kevin|Liam|Michael|Noah|Oscar|Peter|Ryan|Sam|Thomas|William",
+"Girls' names":"Amy|Beth|Clara|Diana|Emma|Fiona|Grace|Hannah|Iris|Julia|Kate|Lily|Maria|Nina|Olivia|Paige|Rachel|Sophie|Tara|Wendy",
+"Movie titles":"Alien|Babe|Casablanca|Dune|Elf|Fargo|Ghost|Heat|Inception|Jaws|King Kong|Labyrinth|Matilda|Nope|Oldboy|Psycho|Rocky|Shrek|Titanic|Wall-E",
+"Things that are cold":"air conditioning|blizzard|cellar|dry ice|Everest|freezer|glacier|hail|ice|January|Klondike bar|lemonade|milkshake|North Pole|ocean water|popsicle|refrigerator|snow|tundra|winter",
+"Types of drink":"apple juice|beer|cider|Dr Pepper|eggnog|Fanta|ginger ale|hot chocolate|iced tea|juice|Kool-Aid|lemonade|milk|nectar|orange juice|punch|root beer|soda|tea|water",
+"Musical instruments":"accordion|banjo|cello|drums|euphonium|flute|guitar|harp|Irish bouzouki|jug|keyboard|lute|mandolin|—|oboe|piano|recorder|saxophone|trumpet|whistle",
+"Things you shout":"Awesome|Bravo|Congratulations|Duck|Excuse me|Fore|Go|Help|Incoming|Jump|Keep going|Look out|Move|No|Oh no|Please|Run|Stop|Timber|Watch out",
+"School subjects":"algebra|biology|chemistry|drama|English|French|geography|history|Italian|journalism|kinesiology|Latin|math|nutrition|orchestra|physics|reading|science|trigonometry|writing",
+"U.S. cities":"Atlanta|Boston|Chicago|Denver|El Paso|Fresno|Green Bay|Houston|Indianapolis|Jacksonville|Kansas City|Las Vegas|Miami|Nashville|Omaha|Phoenix|Reno|Seattle|Tampa|Wichita",
+"Countries":"Argentina|Brazil|Canada|Denmark|Egypt|France|Germany|Hungary|India|Japan|Kenya|Laos|Mexico|Norway|Oman|Peru|Romania|Spain|Turkey|Wales",
+"Things in the sky":"airplane|birds|clouds|drone|eagle|fog|geese|helicopter|ISS|jet|kite|lightning|moon|north star|ozone|planets|rainbow|sun|thunderheads|wind",
+"Animals":"antelope|bear|cat|deer|elephant|fox|goat|horse|iguana|jaguar|kangaroo|lion|moose|newt|otter|pig|rabbit|snake|tiger|wolf",
+"Things at a beach":"algae|bucket|cooler|driftwood|eel|flip-flops|gulls|hat|ice cream|jellyfish|kite|lifeguard|metal detector|net|ocean|pier|raft|sand|towel|waves",
+"Bodies of water":"Atlantic|Baltic Sea|Caribbean|Danube|Erie|fjord|Ganges|Hudson|Indian Ocean|Jordan River|Kennebec River|Lake Michigan|Mediterranean|Nile|Ohio River|Pacific|Rhine|Seine|Thames|Wabash River",
+"Occupations":"architect|baker|chef|dentist|electrician|farmer|gardener|hairdresser|illustrator|janitor|kindergarten teacher|lawyer|mechanic|nurse|optometrist|pilot|realtor|surgeon|teacher|welder",
+"Things that are round":"apple|ball|coin|doughnut|Earth|Frisbee|globe|hula hoop|igloo|jar lid|kickball|lollipop|moon|nickel|orange|pizza|ring|sun|tire|wheel",
+"Sports":"archery|baseball|cricket|diving|equestrian|football|golf|hockey|ice skating|judo|karate|lacrosse|marathon|netball|orienteering|polo|rugby|soccer|tennis|wrestling",
+"Cartoon characters":"Arthur|Bugs Bunny|Charlie Brown|Daffy Duck|Elmer Fudd|Fred Flintstone|Goofy|Homer Simpson|Inspector Gadget|Jerry|Kim Possible|Linus|Mickey Mouse|Nemo|Olive Oyl|Popeye|Road Runner|Scooby-Doo|Tweety|Woody Woodpecker",
+"Things in a park":"acorns|bench|carousel|dogs|elm tree|fountain|grass|hedge|ice cream cart|jungle gym|kids|lamppost|monkey bars|nest|oak tree|picnic table|runners|swings|trash can|water fountain",
+"Terms of endearment":"angel|babe|cutie|darling|—|flower|gorgeous|honey|—|jewel|kitten|love|muffin|nugget|—|pumpkin|rosebud|sweetheart|treasure|wifey",
+"Vegetables":"artichoke|broccoli|carrot|daikon|eggplant|fennel|garlic|horseradish|iceberg lettuce|jicama|kale|leek|mushroom|napa cabbage|okra|pea|radish|spinach|turnip|watercress",
+"Fruits":"apple|banana|cherry|date|elderberry|fig|grape|honeydew|Indian gooseberry|jackfruit|kiwi|lemon|mango|nectarine|orange|peach|raspberry|strawberry|tangerine|watermelon",
+"Things you wear":"apron|belt|coat|dress|earrings|fedora|gloves|hat|ice skates|jacket|kimono|leggings|mittens|necklace|overalls|pants|raincoat|scarf|tie|watch",
+"Things in a garage":"air compressor|bicycle|car|drill|extension cord|funnel|gas can|hammer|ice scraper|jack|kayak|ladder|mower|nails|oil|paint cans|rake|shovel|toolbox|wrench",
+"Reasons to be late":"alarm never went off|bad weather|car trouble|dentist appointment|emergency|flat tire|got lost|hit traffic|ice on the road|jury duty|kid was sick|lost my keys|missed the bus|no parking|overslept|power outage|road closed|slept in|traffic|wrong turn",
+"Card and board games":"Apples to Apples|Battleship|Clue|dominoes|Exploding Kittens|Farkle|Go Fish|Hearts|—|Jenga|Kings in the Corner|Life|Monopoly|Nertz|Old Maid|poker|Risk|Scrabble|Trouble|War",
+"Things that grow":"algae|bamboo|corn|daisies|evergreen|ferns|grass|hair|ivy|juniper|kudzu|lettuce|moss|nails|oak|plants|roots|seedlings|tomatoes|weeds",
+"Colors":"amber|blue|crimson|denim|emerald|fuchsia|gold|hazel|indigo|jade|khaki|lavender|magenta|navy|olive|purple|red|silver|teal|white",
+"Insects":"ant|beetle|cricket|dragonfly|earwig|firefly|grasshopper|hornet|inchworm|June bug|katydid|ladybug|moth|no-see-um|—|praying mantis|roach|stink bug|termite|wasp",
+"Things at a circus":"acrobat|balloons|clown|daredevil|elephant|fire eater|games|high wire|illusionist|juggler|knife thrower|lion tamer|magician|net|organ music|popcorn|ringmaster|stilts|trapeze|whip",
+"Excuses for missing work":"allergies|bad back|car broke down|doctor's appointment|emergency at home|flu|got food poisoning|headache|ill|jury duty|kid is sick|lost my voice|migraine|no childcare|out sick|pipe burst|root canal|stomach bug|toothache|wisdom teeth",
+"Items in a suitcase":"adapter|belt|charger|deodorant|earplugs|flip-flops|glasses|hairbrush|inhaler|jeans|keys|laptop|makeup|nail clippers|outfits|passport|razor|socks|toothbrush|wallet",
+"Historical figures":"Amelia Earhart|Beethoven|Cleopatra|Darwin|Einstein|Ferdinand Magellan|Gandhi|Harriet Tubman|Isaac Newton|Joan of Arc|King Tut|Lincoln|Marie Curie|Napoleon|Otto von Bismarck|Plato|Rosa Parks|Socrates|Tesla|Washington",
+"TV shows":"Alias|Bones|Cheers|Dexter|ER|Friends|Glee|House|I Love Lucy|Jeopardy|Kojak|Lost|MASH|NCIS|Ozark|Psych|Rome|Seinfeld|Taxi|Wednesday",
+"Things that are sticky":"adhesive|bubble gum|caramel|duct tape|epoxy|flypaper|glue|honey|icing|jam|ketchup|lollipop|molasses|nectar|oatmeal|peanut butter|resin|syrup|tape|wax",
+"Things you plug in":"air fryer|blender|coffee maker|dryer|electric razor|fan|griddle|hair dryer|iron|juicer|kettle|lamp|microwave|nightlight|oven|printer|radio|speaker|toaster|washer",
+"Things in a hospital":"anesthesia|bandages|crutches|doctor|elevator|forceps|gurney|heart monitor|IV drip|janitor|Kleenex|lab|monitor|nurse|operating room|patients|radiology|scrubs|thermometer|wheelchair",
+"Restaurant names":"Applebee's|Burger King|Chipotle|Denny's|El Pollo Loco|Five Guys|Golden Corral|Hardee's|IHOP|Jack in the Box|KFC|Long John Silver's|McDonald's|Nando's|Olive Garden|Panera|Red Lobster|Subway|Taco Bell|Wendy's",
+"Breakfast foods":"avocado toast|bacon|cereal|doughnut|eggs|French toast|granola|hash browns|instant oatmeal|jam|kippers|latte|muffin|Nutella toast|omelet|pancakes|raisin bran|sausage|toast|waffles"
+};
+/* ANSWERS-END */
+function lookup(cat, letter){
+  const row = ANSWERS[cat];
+  if(!row) return null;
+  const v = row.split("|")[LETTER_ORDER.indexOf(letter)];
+  return v || null;
+}
+
 /* ---------------- state ---------------- */
 const $ = id => document.getElementById(id);
 let total = 120, left = 120, ticking = false, timer = null, round = 0, catCount = 12;
@@ -521,12 +574,27 @@ function paintAnswers(list){
 async function showExamples(){
   const letter = lastLetter, cats = currentCats.slice();
   if(!cats.length) return;
-  $("exStatus").textContent = "Finding examples…";
+
+  /* offline library first */
+  const answers = cats.map(c=>lookup(c, letter));
+  const gaps = answers.reduce((a,v,i)=> v === null ? (a.push(i), a) : a, []);
+
+  if(!gaps.length){
+    paintAnswers(answers);
+    $("exStatus").textContent = "Sample answers";
+    return;
+  }
+
+  /* anything the library doesn't cover yet: ask online, then give up gracefully */
+  paintAnswers(answers.map(v=>v === null ? "…" : v));
+  $("exStatus").textContent = "Sample answers";
+  const missing = gaps.map(i=>cats[i]);
   const prompt =
     `For each numbered category below, give one common, valid answer that begins with the letter "${letter}".\n` +
     `Keep every answer to 1-3 words. If nothing reasonable fits, use a dash.\n` +
-    `Reply with ONLY a JSON array of ${cats.length} strings in the same order. No preamble, no code fences.\n\n` +
-    cats.map((c,i)=>`${i+1}. ${c}`).join("\n");
+    `Reply with ONLY a JSON array of ${missing.length} strings in the same order. No preamble, no code fences.\n\n` +
+    missing.map((c,i)=>`${i+1}. ${c}`).join("\n");
+  let filled = null;
   try{
     const res = await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
@@ -537,18 +605,20 @@ async function showExamples(){
         messages:[{role:"user",content:prompt}]
       })
     });
-    if(!res.ok) throw new Error("request failed");
-    const data = await res.json();
-    const text = data.content.filter(b=>b.type === "text").map(b=>b.text).join("").trim();
-    const parsed = JSON.parse(text.replace(/^```(?:json)?/,"").replace(/```$/,"").trim());
-    if(!Array.isArray(parsed)) throw new Error("bad shape");
-    /* only paint if the round hasn't moved on */
-    if(lastLetter !== letter) return;
-    paintAnswers(parsed.map(v=>String(v)));
-    $("exStatus").textContent = "Sample answers";
-  }catch(err){
-    $("exStatus").textContent = "Examples unavailable";
-  }
+    if(res.ok){
+      const data = await res.json();
+      const text = data.content.filter(b=>b.type === "text").map(b=>b.text).join("").trim();
+      const parsed = JSON.parse(text.replace(/^```(?:json)?/,"").replace(/```$/,"").trim());
+      if(Array.isArray(parsed)) filled = parsed.map(v=>String(v));
+    }
+  }catch(err){ /* offline: fall through to dashes */ }
+
+  if(lastLetter !== letter) return;
+  const rows = [...$("cats").children];
+  gaps.forEach((rowIndex, k)=>{
+    const el = rows[rowIndex] && rows[rowIndex].querySelector(".answer");
+    if(el) el.textContent = (filled && filled[k]) ? filled[k] : "—";
+  });
 }
 
 /* end-of-round buzzer */
