@@ -30,7 +30,7 @@
   .headlink{
     border:1px solid var(--ink);background:var(--paper);color:var(--ink);text-decoration:none;
     padding:8px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;
-    text-transform:uppercase;white-space:nowrap;
+    text-transform:uppercase;white-space:nowrap;cursor:pointer;line-height:1.3;
   }
   .headlink:hover{background:var(--ink);color:var(--paper);}
   .meta{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);}
@@ -39,6 +39,11 @@
   .label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);
     display:block;margin-bottom:8px;}
   h2.sec{margin:0 0 18px;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;}
+  h2.big{
+    margin:0 0 6px;font-size:clamp(28px,4.4vw,42px);font-weight:900;letter-spacing:-.035em;
+    line-height:1;text-transform:none;
+  }
+  .lede{font-size:15px;color:var(--mute);margin:0 0 26px;font-weight:500;}
 
   input[type=text],input[type=number]{border:1px solid var(--ink);background:var(--paper);
     padding:11px 12px;font-family:var(--display);font-weight:500;font-size:15px;width:100%;}
@@ -90,23 +95,37 @@
   ol.answers input{flex:1.1;border:0;border-bottom:1px solid var(--ink);padding:6px 2px;}
   ol.answers input:focus{outline:none;background:var(--wash);}
 
-  .vote-card{border:1px solid var(--ink);margin-bottom:-1px;}
-  .vote-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
-    padding:14px 18px;border-bottom:1px solid var(--ink);background:var(--wash);flex-wrap:wrap;}
-  .vote-cat{font-weight:600;font-size:15px;}
-  .vote-row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--rule);
-    flex-wrap:wrap;}
-  .vote-row:last-child{border-bottom:0;}
-  .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--mute);min-width:110px;}
-  .said{flex:1;font-weight:600;font-size:16px;min-width:120px;}
+  .vote-progress{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--mute);margin-bottom:10px;}
+  .vote-track{height:4px;background:var(--wash);border:1px solid var(--rule);margin-bottom:26px;}
+  .vote-track div{height:100%;background:var(--ink);transition:width .3s ease;}
+  #voteClock{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500;}
+  #voteClock.low{animation:pulse 1s steps(1) infinite;}
+  @keyframes pulse{50%{opacity:.25}}
+  @media (prefers-reduced-motion:reduce){#voteClock.low{animation:none;}}
+  #voteTimeFill{transition:width .25s linear;}
+
+  .vote-cat{font-weight:800;font-size:clamp(24px,4.2vw,40px);letter-spacing:-.02em;line-height:1.1;
+    margin:0 0 6px;}
+  .vote-sub{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);margin:0 0 26px;}
+
+  .vote-row{display:flex;align-items:center;gap:20px;padding:18px 0;
+    border-bottom:1px solid var(--rule);flex-wrap:wrap;}
+  .vote-row:first-of-type{border-top:1px solid var(--ink);}
+  .who{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--mute);min-width:120px;}
+  .said{flex:1;font-weight:700;font-size:clamp(18px,2.6vw,26px);min-width:150px;letter-spacing:-.01em;}
   .said.dead{text-decoration:line-through;color:var(--mute);font-weight:500;}
-  .vbtns{display:flex;gap:8px;}
-  .vbtn{border:1px solid var(--ink);background:var(--paper);padding:6px 14px;cursor:pointer;
-    font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;}
+  .vbtns{display:flex;gap:10px;}
+  .vbtn{border:1px solid var(--ink);background:var(--paper);padding:14px 30px;cursor:pointer;
+    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;min-width:110px;}
   .vbtn:hover{background:var(--wash);}
   .vbtn.on{background:var(--ink);color:var(--paper);}
-  .tally{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.08em;min-width:70px;}
+  .vbtn.on:hover{background:var(--ink);color:var(--paper);}
+  .tally{font-family:var(--mono);font-size:11.5px;color:var(--mute);letter-spacing:.1em;
+    text-transform:uppercase;min-width:96px;text-align:right;}
 
   .note{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--mute);line-height:1.7;}
   .warn{border:1px solid var(--ink);padding:22px;}
@@ -123,7 +142,8 @@
   <header>
     <h1 class="wordmark">Scattergories</h1>
     <span class="headwrap">
-      <a class="headlink" href="index.html">Solo generator</a>
+      <a class="headlink" href="scattergories.html">Solo generator</a>
+      <button class="headlink hide" id="leaveBtn">Leave room</button>
       <span class="meta" id="hmeta">Multiplayer</span>
     </span>
   </header>
@@ -161,7 +181,8 @@
     <!-- ============ home ============ -->
     <section id="v-home" class="split hide">
       <div>
-        <h2 class="sec">Create a room</h2>
+        <h2 class="big">Create a room</h2>
+        <p class="lede">Start a new game and invite everyone else.</p>
         <label class="label" for="nameA">Your name</label>
         <input type="text" id="nameA" maxlength="14" placeholder="Name">
         <div class="row" style="margin-top:18px">
@@ -172,7 +193,8 @@
         </p>
       </div>
       <div>
-        <h2 class="sec">Join a room</h2>
+        <h2 class="big">Join a room</h2>
+        <p class="lede">Already have a code from a friend? Enter it here.</p>
         <label class="label" for="nameB">Your name</label>
         <input type="text" id="nameB" maxlength="14" placeholder="Name">
         <label class="label" for="codeIn" style="margin-top:16px">Room code</label>
@@ -234,13 +256,22 @@
 
     <!-- ============ voting ============ -->
     <section id="v-vote" class="pad hide">
-      <h2 class="sec">Voting — <span id="voteRound">Round 1</span></h2>
-      <p class="note" style="margin-bottom:18px">
-        Matching answers cancel each other out and score nothing. Vote on the rest.
-      </p>
-      <div id="voteCards"></div>
-      <div class="row" style="margin-top:24px">
-        <button class="btn solid hide" id="tallyBtn">Finish voting</button>
+      <div class="vote-progress">
+        <span id="voteRound">Round 1</span>
+        <span id="voteCount">Category 1 of 10</span>
+        <span id="voteClock">0:20</span>
+      </div>
+      <div class="vote-track"><div id="voteFill" style="width:0%"></div></div>
+      <div class="vote-track" style="margin-top:-18px"><div id="voteTimeFill" style="width:100%"></div></div>
+
+      <h2 class="vote-cat" id="voteCat">Category</h2>
+      <p class="vote-sub" id="voteSub">Letter A</p>
+
+      <div id="voteRows"></div>
+
+      <div class="row" style="margin-top:28px">
+        <button class="btn" id="prevCatBtn">Back</button>
+        <button class="btn solid" id="nextCatBtn">Next category</button>
       </div>
       <p class="note" style="margin-top:14px" id="voteNote"></p>
     </section>
@@ -252,6 +283,7 @@
       <div class="row" style="margin-top:26px">
         <button class="btn solid hide" id="nextBtn">Next round</button>
         <button class="btn hide" id="againBtn">Play again</button>
+        <button class="btn hide" id="leaveBtn2">Leave room</button>
       </div>
       <p class="note" style="margin-top:14px" id="scoreNote"></p>
     </section>
@@ -337,6 +369,7 @@ const me = "p" + Math.random().toString(36).slice(2, 9);
 let myName = "";
 let code = null, room = null, db = null, roomRef = null, unsub = null;
 let clockTimer = null, lastPhase = null, tallied = false;
+let autoTimer = null, lastAuto = null, voteTimer = null;
 
 /* ---------- setup ---------- */
 if(!FIREBASE_CONFIG.databaseURL){
@@ -506,7 +539,13 @@ function toVoting(){
     Object.values(seen).forEach(list => { if(list.length > 1) flagged.push(...list); });
     if(flagged.length) dupes[ci] = flagged;
   });
-  update(roomRef, { phase:"voting", [`dupes/${room.round}`]: dupes });
+  /* enough time to read every answer and vote, without dragging */
+  const voteSeconds = Math.max(18, Math.min(36, 12 + 5 * playerIds().length));
+  update(roomRef, {
+    phase:"voting", voteIndex:0, voteSeconds,
+    voteStartedAt: serverTimestamp(),
+    [`dupes/${room.round}`]: dupes
+  });
 }
 
 function validStart(raw){
@@ -514,68 +553,112 @@ function validStart(raw){
 }
 
 function renderVoting(){
+  const ci = Math.min(room.voteIndex || 0, room.categories.length - 1);
   const answers = (room.answers && room.answers[room.round]) || {};
-  const dupes = (room.dupes && room.dupes[room.round]) || {};
-  const votes = (room.votes && room.votes[room.round]) || {};
+  const dupes = ((room.dupes && room.dupes[room.round]) || {})[ci] || [];
+  const votes = ((room.votes && room.votes[room.round]) || {})[ci] || {};
   const players = room.players || {};
+  const total = room.categories.length;
 
-  $("voteRound").textContent = "Round " + room.round;
-  $("voteCards").innerHTML = room.categories.map((cat, ci)=>{
-    const dup = dupes[ci] || [];
-    const rows = playerIds().map(p=>{
-      const raw = (answers[p] && answers[p][ci]) || "";
-      const isDup = dup.includes(p);
-      const blank = !raw.trim();
-      const wrong = raw.trim() && !validStart(raw);
-      const dead = blank || isDup || wrong;
-      const cast = (votes[ci] && votes[ci][p]) || {};
-      const yes = Object.values(cast).filter(v => v === true).length;
-      const no  = Object.values(cast).filter(v => v === false).length;
-      const mine = cast[me];
+  $("voteRound").textContent = `Round ${room.round} of ${room.rounds}`;
+  $("voteCount").textContent = `Category ${ci + 1} of ${total}`;
+  $("voteFill").style.width = ((ci + 1) / total * 100) + "%";
+  $("voteCat").textContent = room.categories[ci];
+  $("voteSub").textContent = "Letter " + room.letter;
 
-      let text = blank ? "(no answer)" : escapeHtml(raw);
-      let why = "";
-      if(blank) why = "blank";
-      else if(isDup) why = "duplicate";
-      else if(wrong) why = "wrong letter";
+  let pending = 0;
+  $("voteRows").innerHTML = playerIds().map(p=>{
+    const raw = (answers[p] && answers[p][ci]) || "";
+    const blank = !raw.trim();
+    const isDup = dupes.includes(p);
+    const wrong = !blank && !validStart(raw);
+    const dead = blank || isDup || wrong;
+    const cast = votes[p] || {};
+    const yes = Object.values(cast).filter(v => v === true).length;
+    const no  = Object.values(cast).filter(v => v === false).length;
+    const mine = cast[me];
+    if(!dead && p !== me && mine === undefined) pending++;
 
-      const buttons = (dead || p === me) ? "" :
-        `<div class="vbtns">
-           <button class="vbtn ${mine === true ? "on" : ""}" data-ci="${ci}" data-p="${p}" data-v="1">Valid</button>
-           <button class="vbtn ${mine === false ? "on" : ""}" data-ci="${ci}" data-p="${p}" data-v="0">No</button>
-         </div>`;
-      const tally = dead ? `<span class="tally">${why}</span>`
-                         : `<span class="tally">${yes} / ${yes + no}</span>`;
+    const why = blank ? "No answer" : isDup ? "Duplicate" : wrong ? "Wrong letter" : "";
+    const text = blank ? "—" : escapeHtml(raw);
 
-      return `<div class="vote-row">
-                <span class="who">${escapeHtml(players[p] ? players[p].name : "?")}</span>
-                <span class="said ${dead ? "dead" : ""}">${text}</span>
-                ${tally}${buttons}
-              </div>`;
-    }).join("");
+    const buttons = (dead || p === me) ? "" :
+      `<div class="vbtns">
+         <button class="vbtn ${mine === true ? "on" : ""}" data-p="${p}" data-v="1">Valid</button>
+         <button class="vbtn ${mine === false ? "on" : ""}" data-p="${p}" data-v="0">No</button>
+       </div>`;
+    const tally = dead ? `<span class="tally">${why}</span>`
+                       : `<span class="tally">${yes} of ${yes + no}</span>`;
 
-    return `<div class="vote-card">
-              <div class="vote-head"><span class="vote-cat">${escapeHtml(cat)}</span>
-              <span class="meta">${room.letter}</span></div>
-              ${rows}
+    return `<div class="vote-row">
+              <span class="who">${escapeHtml(players[p] ? players[p].name : "?")}${p === me ? " (you)" : ""}</span>
+              <span class="said ${dead ? "dead" : ""}">${text}</span>
+              ${tally}${buttons}
             </div>`;
   }).join("");
 
-  $("voteCards").querySelectorAll(".vbtn").forEach(b=>{
+  $("voteRows").querySelectorAll(".vbtn").forEach(b=>{
     b.addEventListener("click", ()=>{
       update(roomRef, {
-        [`votes/${room.round}/${b.dataset.ci}/${b.dataset.p}/${me}`]: b.dataset.v === "1"
+        [`votes/${room.round}/${ci}/${b.dataset.p}/${me}`]: b.dataset.v === "1"
       });
     });
   });
 
-  $("tallyBtn").classList.toggle("hide", !isHost());
-  $("voteNote").textContent = isHost()
-    ? "Everyone votes, then finish voting to score the round."
-    : "The host will move things along when the votes are in.";
+  const last = ci === total - 1;
+  $("nextCatBtn").textContent = last ? "Finish voting" : "Next category";
+  $("nextCatBtn").classList.toggle("hide", !isHost());
+  $("prevCatBtn").classList.toggle("hide", !isHost() || ci === 0);
+
+  if(pending) $("voteNote").textContent = "Cast your votes before the clock runs out.";
+  else if(isHost()) $("voteNote").textContent = "You have voted. It moves on by itself, or use the buttons.";
+  else $("voteNote").textContent = "You have voted. It moves on by itself.";
+
+  /* nudge the host along once every vote for this category is in */
+  if(isHost() && !allVotesIn(ci)) return;
+  if(isHost() && lastAuto !== `${room.round}:${ci}`){
+    lastAuto = `${room.round}:${ci}`;
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(()=>{
+      if(room && room.phase === "voting" && (room.voteIndex || 0) === ci) advanceVote(1);
+    }, 1200);
+  }
 }
 
-$("tallyBtn").addEventListener("click", ()=>{ if(isHost()) tally(); });
+function allVotesIn(ci){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const dupes = ((room.dupes && room.dupes[room.round]) || {})[ci] || [];
+  const votes = ((room.votes && room.votes[room.round]) || {})[ci] || {};
+  const ids = playerIds();
+  return ids.every(owner=>{
+    const raw = (answers[owner] && answers[owner][ci]) || "";
+    if(!raw.trim() || dupes.includes(owner) || !validStart(raw)) return true;
+    const cast = votes[owner] || {};
+    return ids.filter(v => v !== owner).every(v => cast[v] !== undefined);
+  });
+}
+
+function advanceVote(step){
+  const ci = room.voteIndex || 0;
+  const next = ci + step;
+  clearTimeout(autoTimer);
+  if(next < 0) return;
+  if(next >= room.categories.length){ tally(); return; }
+  update(roomRef, { voteIndex: next, voteStartedAt: serverTimestamp() });
+}
+
+function tickVote(){
+  if(!room || room.phase !== "voting" || !room.voteStartedAt) return;
+  const total = room.voteSeconds || 24;
+  const left = Math.max(0, total - Math.floor((Date.now() - room.voteStartedAt) / 1000));
+  $("voteClock").textContent = Math.floor(left/60) + ":" + String(left%60).padStart(2,"0");
+  $("voteClock").classList.toggle("low", left <= 5 && left > 0);
+  $("voteTimeFill").style.width = (left / total * 100) + "%";
+  if(left === 0 && isHost()) advanceVote(1);
+}
+
+$("nextCatBtn").addEventListener("click", ()=>{ if(isHost()) advanceVote(1); });
+$("prevCatBtn").addEventListener("click", ()=>{ if(isHost()) advanceVote(-1); });
 
 function tally(){
   const answers = (room.answers && room.answers[room.round]) || {};
@@ -629,8 +712,39 @@ function renderScores(){
 
   $("nextBtn").classList.toggle("hide", done || !isHost());
   $("againBtn").classList.toggle("hide", !done || !isHost());
+  $("leaveBtn2").classList.toggle("hide", !done);
   $("scoreNote").textContent = isHost() ? "" : "Waiting for the host.";
 }
+
+/* ---------- leaving ---------- */
+async function leaveRoom(){
+  if(!roomRef || !code) return;
+  const mid = room && room.phase !== "lobby" && room.phase !== "scores";
+  if(mid && !confirm("Leave the game in progress?")) return;
+
+  const c = code, last = playerIds().length <= 1;
+
+  /* stop listening first so the removal doesn't re-render a half-gone room */
+  if(unsub){ unsub(); unsub = null; }
+  clearInterval(clockTimer); clearInterval(voteTimer); clearTimeout(autoTimer);
+
+  try{
+    await onDisconnect(ref(db, `rooms/${c}/players/${me}`)).cancel();
+    if(last) await remove(ref(db, "rooms/" + c));
+    else await remove(ref(db, `rooms/${c}/players/${me}`));
+  }catch(e){ /* nothing useful to do if the write fails */ }
+
+  code = null; room = null; roomRef = null; lastPhase = null; lastAuto = null;
+  $("leaveBtn").classList.add("hide");
+  $("hmeta").textContent = "Multiplayer";
+  $("footLeft").textContent = "Connected";
+  $("joinErr").textContent = "";
+  $("codeIn").value = "";
+  show("v-home");
+}
+
+$("leaveBtn").addEventListener("click", leaveRoom);
+$("leaveBtn2").addEventListener("click", leaveRoom);
 
 /* ---------- render ---------- */
 function render(){
@@ -639,6 +753,7 @@ function render(){
     update(roomRef, { hostId: me });
   }
   $("hmeta").textContent = code ? "Room " + code + (isHost() ? " · host" : "") : "Multiplayer";
+  $("leaveBtn").classList.toggle("hide", !code);
 
   const phase = room.phase;
   if(phase === "lobby"){
@@ -678,11 +793,17 @@ function render(){
 
   else if(phase === "voting"){
     clearInterval(clockTimer);
+    if(lastPhase !== "voting"){
+      clearInterval(voteTimer);
+      voteTimer = setInterval(tickVote, 250);
+    }
     show("v-vote");
     renderVoting();
+    tickVote();
   }
 
   else if(phase === "scores"){
+    clearInterval(voteTimer);
     show("v-scores");
     renderScores();
   }
