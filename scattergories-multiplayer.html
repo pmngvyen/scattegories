@@ -167,7 +167,7 @@
     padding:5px 16px;border:3px solid currentColor;white-space:nowrap;
     background:var(--paper);
   }
-  .stamp .n{font-weight:700;font-size:.72em;letter-spacing:.02em;opacity:.85;margin-left:7px;}
+  .stamp .n{font-weight:900;font-size:.82em;letter-spacing:.02em;margin-left:9px;}
   .stamp.yes{color:#14874A;box-shadow:0 0 0 2px var(--paper);}
   .stamp.nope{color:#CB2020;box-shadow:0 0 0 2px var(--paper);}
   .stamp.slam{animation:slam .38s cubic-bezier(.2,1.5,.4,1) both;}
@@ -182,6 +182,40 @@
   .vbtn.on.yes{background:#14874A;border-color:#14874A;color:#fff;}
   .vbtn.on.nope{background:#CB2020;border-color:#CB2020;color:#fff;}
   @media (prefers-reduced-motion:reduce){ .stamp.slam{animation:none;} }
+
+  .bigwin{font-size:clamp(26px,5vw,46px);font-weight:900;letter-spacing:-.035em;line-height:1;
+    margin:0 0 26px;}
+  .bigwin:empty{display:none;}
+
+  ol.rank{list-style:none;margin:0;padding:0;counter-reset:r;border-top:1px solid var(--ink);}
+  ol.rank li{counter-increment:r;display:flex;align-items:center;gap:18px;padding:16px 14px;
+    border-bottom:1px solid var(--rule);}
+  ol.rank li::before{content:counter(r);font-weight:900;font-size:22px;min-width:34px;
+    font-variant-numeric:tabular-nums;color:var(--mute);}
+  ol.rank li.lead{background:var(--ink);color:var(--paper);border-bottom-color:var(--ink);}
+  ol.rank li.lead::before{color:var(--paper);}
+  ol.rank .nm{flex:1;font-weight:700;font-size:clamp(17px,2.4vw,23px);letter-spacing:-.01em;}
+  ol.rank .got{font-family:var(--mono);font-size:12px;letter-spacing:.08em;border:1px solid currentColor;
+    padding:4px 9px;}
+  ol.rank .tot{font-weight:900;font-size:clamp(24px,3.4vw,34px);font-variant-numeric:tabular-nums;
+    min-width:60px;text-align:right;}
+
+  .bd{border:1px solid var(--ink);margin-bottom:-1px;}
+  .bd-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+    padding:12px 16px;background:var(--wash);border-bottom:1px solid var(--ink);}
+  .bd-head .who2{font-weight:700;font-size:16px;}
+  .bd-head .sum{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--mute);}
+  .bd-row{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);}
+  .bd-row:last-child{border-bottom:0;}
+  .bd-cat{flex:1.1;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;color:var(--mute);
+    min-width:130px;}
+  .bd-ans{flex:1.4;font-weight:600;font-size:15px;min-width:110px;}
+  .bd-ans.out{text-decoration:line-through;color:var(--mute);font-weight:400;}
+  .pts{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    padding:3px 9px;border:1px solid currentColor;white-space:nowrap;min-width:78px;text-align:center;}
+  .pts.win{color:#14874A;}
+  .pts.loss{color:#CB2020;}
 
   .hide{display:none!important;}
 </style>
@@ -299,6 +333,7 @@
             <button class="btn" id="pauseBtn">Pause</button>
           </div>
           <p class="note" style="margin-top:12px" id="submitNote"></p>
+          <p class="note">Extra words on the letter score extra — "Naughty Nancy" is 2.</p>
         </div>
       </div>
       <ol class="answers" id="answerList"></ol>
@@ -326,9 +361,14 @@
 
     <!-- ============ scores ============ -->
     <section id="v-scores" class="pad hide">
-      <h2 class="sec" id="scoreTitle">Scores</h2>
-      <ul class="plain" id="scoreList" style="max-width:520px"></ul>
-      <div class="row" style="margin-top:26px">
+      <h2 class="sec" id="scoreKicker">After round 1</h2>
+      <h3 class="bigwin" id="scoreTitle"></h3>
+      <ol class="rank" id="scoreList"></ol>
+
+      <h2 class="sec" style="margin-top:38px">This round, answer by answer</h2>
+      <div id="breakdown"></div>
+
+      <div class="row" style="margin-top:30px">
         <button class="btn solid hide" id="nextBtn">Next round</button>
         <button class="btn hide" id="againBtn">Play again</button>
         <button class="btn hide" id="leaveBtn2">Leave room</button>
@@ -339,7 +379,7 @@
 
   <footer>
     <span id="footLeft">Not connected</span>
-    <span>Duplicate answers score nothing</span>
+    <span>Duplicates score nothing · Every extra word on the letter scores +1</span>
   </footer>
 </div>
 
@@ -445,6 +485,7 @@ let code = null, room = null, db = null, roomRef = null, unsub = null;
 let clockTimer = null, lastPhase = null, tallied = false;
 let autoTimer = null, lastAuto = null, cdTimer = null, endTimer = null;
 let introTimer = null, introTimer2 = null;
+let connWatch = null, myScore = 0, hostGoneSince = null;
 const stampSeen = new Set();
 
 /* ---------- setup ---------- */
@@ -473,6 +514,25 @@ function shuffle(a){
 const isHost = () => room && room.hostId === me;
 const playerIds = () => Object.keys((room && room.players) || {});
 
+/* Everyone who took part in this round, including anyone whose connection
+   dropped afterwards. Using the live player list here meant a brief disconnect
+   could delete someone's answers from the voting screen on one client and not
+   another, so two screens could disagree about duplicates and about whether
+   every vote was in. */
+function roundPlayers(){
+  const answered  = Object.keys((room.answers && room.answers[room.round]) || {});
+  const submitted = Object.keys((room.submitted && room.submitted[room.round]) || {});
+  return [...new Set([...playerIds(), ...answered, ...submitted])];
+}
+/* People we wait on. Someone marked away is skipped so a dropped phone can't
+   freeze the round for everyone else — their answers are still judged. */
+const activeIds = () =>
+  playerIds().filter(p => room.players[p] && room.players[p].online !== false);
+
+const nameOf = p =>
+  (room.players && room.players[p] && room.players[p].name) ||
+  (room.names && room.names[p]) || "Player";
+
 /* ---------- create / join ---------- */
 $("createBtn").addEventListener("click", async ()=>{
   myName = ($("nameA").value || "").trim();
@@ -488,7 +548,8 @@ $("createBtn").addEventListener("click", async ()=>{
     hostId: me, phase: "lobby", round: 0,
     seconds: 120, rounds: 3, catCount: 10,
     createdAt: serverTimestamp(),
-    players: { [me]: { name: myName, score: 0 } }
+    players: { [me]: { name: myName, score: 0 } },
+    names: { [me]: myName }
   });
   attach(c);
 });
@@ -503,21 +564,53 @@ $("joinBtn").addEventListener("click", async ()=>{
   if(!snap.exists()){ $("joinErr").textContent = "No room with that code."; return; }
   if(snap.val().phase !== "lobby"){ $("joinErr").textContent = "That game already started."; return; }
   await update(ref(db, `rooms/${c}/players/${me}`), { name: myName, score: 0 });
+  await update(ref(db, `rooms/${c}/names`), { [me]: myName });
   attach(c);
 });
 
 function attach(c){
   code = c;
   roomRef = ref(db, "rooms/" + c);
-  onDisconnect(ref(db, `rooms/${c}/players/${me}`)).remove();
+  const meRef = ref(db, `rooms/${c}/players/${me}`);
+
+  /* Presence. A dropped connection marks you away rather than deleting you —
+     removing the record used to wipe your name and answers mid-game, and
+     nothing put you back when the connection returned. */
+  if(connWatch) connWatch();
+  connWatch = onValue(ref(db, ".info/connected"), snap=>{
+    if(snap.val() !== true || !code) return;
+    onDisconnect(meRef).update({ online: false });
+    get(meRef).then(s=>{
+      if(s.exists()) update(meRef, { name: myName, online: true });
+      else set(meRef, { name: myName, score: myScore, online: true });   /* came back after a drop */
+    }).catch(()=>{});
+  });
+
   $("footLeft").textContent = "Room " + c;
   if(unsub) unsub();
   unsub = onValue(roomRef, snap=>{
     room = snap.val();
     if(!room){ alert("The room was closed."); location.reload(); return; }
+    if(room.players && room.players[me]) myScore = room.players[me].score || 0;
     render();
   });
 }
+
+/* If the host vanishes for good, someone else takes over — but only after a
+   grace period, so a brief blip doesn't hand the room to another player. */
+function checkHost(){
+  if(!room || !roomRef) return;
+  const rec = room.players && room.players[room.hostId];
+  const gone = !rec || rec.online === false;
+  if(!gone){ hostGoneSince = null; return; }
+  if(!hostGoneSince){ hostGoneSince = Date.now(); return; }
+  const online = playerIds().filter(p => !room.players[p] || room.players[p].online !== false);
+  if(Date.now() - hostGoneSince > 12000 && online[0] === me){
+    hostGoneSince = null;
+    update(roomRef, { hostId: me });
+  }
+}
+setInterval(checkHost, 4000);
 
 /* ---------- host: settings + start ---------- */
 ["setSeconds","setRounds","setCats"].forEach(id=>{
@@ -554,11 +647,21 @@ function startRound(n){
   });
 }
 
+const CD_LEAD = 1.3;   /* panel sits there first so it isn't a jump-scare */
 const CD_SECONDS = 3;
 function tickCountdown(){
   if(!room || room.phase !== "countdown" || !room.countdownAt) return;
-  const left = CD_SECONDS - (Date.now() - room.countdownAt) / 1000;
+  const gone = (Date.now() - room.countdownAt) / 1000;
   $("cdRound").textContent = `Round ${room.round} of ${room.rounds}`;
+
+  if(gone < CD_LEAD){
+    $("cdNum").textContent = "";
+    $("cd").classList.remove("out");
+    return;
+  }
+
+  const left = CD_SECONDS - (gone - CD_LEAD);
+  $("cdNum").classList.remove("go");
   $("cdNum").textContent = Math.max(1, Math.ceil(left));
   if(left <= 0){
     $("cd").classList.add("out");           /* fade away rather than cut */
@@ -641,7 +744,8 @@ $("resumeBtn").addEventListener("click", ()=>{
 
 function allSubmitted(){
   const sub = (room.submitted && room.submitted[room.round]) || {};
-  return playerIds().every(p => sub[p]);
+  const ids = activeIds().length ? activeIds() : playerIds();
+  return ids.every(p => sub[p]);
 }
 
 /* ---------- voting ---------- */
@@ -651,7 +755,7 @@ function allSubmitted(){
 function dupesFor(ci){
   const answers = (room.answers && room.answers[room.round]) || {};
   const seen = {};
-  playerIds().forEach(p=>{
+  roundPlayers().forEach(p=>{
     const key = norm((answers[p] && answers[p][ci]) || "");
     if(!key) return;
     (seen[key] = seen[key] || []).push(p);
@@ -666,8 +770,42 @@ function toVoting(){
   update(roomRef, { phase:"voting", voteIndex:0 });
 }
 
+/* One place decides an answer's fate, so voting, scoring and the scoreboard
+   can never disagree. A tie counts as rejected. */
+function judge(p, ci){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const votes = ((room.votes && room.votes[room.round]) || {})[ci] || {};
+  const raw = (answers[p] && answers[p][ci]) || "";
+  const cast = votes[p] || {};
+  const yes = Object.values(cast).filter(v => v === true).length;
+  const no  = Object.values(cast).filter(v => v === false).length;
+
+  if(!raw.trim())              return { raw, yes, no, dead:true, ok:false, points:0, reason:"No answer" };
+  if(dupesFor(ci).includes(p)) return { raw, yes, no, dead:true, ok:false, points:0, reason:"Duplicate" };
+  if(!validStart(raw))         return { raw, yes, no, dead:true, ok:false, points:0, reason:"Wrong letter" };
+
+  /* nobody voted at all: nothing to object to, it stands */
+  const untouched = yes + no === 0;
+  const ok = untouched || yes > no;
+  return { raw, yes, no, dead:false, ok, points: ok ? letterPoints(raw) : 0,
+           reason: ok ? "" : "Voted out" };
+}
+
 function validStart(raw){
   return norm(raw).charAt(0) === room.letter.toLowerCase();
+}
+
+/* Alliteration bonus: every word beginning with the round's letter is worth a
+   point, so "Nice but Naughty Nate" on N scores 3. Always at least 1. */
+function letterPoints(raw){
+  const L = room.letter.toLowerCase();
+  const hits = (raw || "")
+    .toLowerCase()
+    .split(/[\s\-–—]+/)
+    .map(w => w.replace(/[^a-z0-9]/g, ""))
+    .filter(w => w && w.charAt(0) === L)
+    .length;
+  return Math.max(1, hits);
 }
 
 function renderVoting(){
@@ -687,7 +825,7 @@ function renderVoting(){
   let pending = 0;
   const settled = allVotesIn(ci);
 
-  $("voteRows").innerHTML = playerIds().map(p=>{
+  $("voteRows").innerHTML = roundPlayers().map(p=>{
     const raw = (answers[p] && answers[p][ci]) || "";
     const blank = !raw.trim();
     const isDup = dupes.includes(p);
@@ -699,16 +837,18 @@ function renderVoting(){
     const mine = cast[me];
     if(!dead && mine === undefined) pending++;
 
-    const why = blank ? "No answer" : isDup ? "Duplicate" : wrong ? "Wrong letter" : "";
+    const v = judge(p, ci);
+    const why = v.reason;
     const text = blank ? "—" : escapeHtml(raw);
-    const rejected = !dead && settled && no > yes;
+    const rejected = !dead && settled && !v.ok;
 
     /* work out the stamp, if this answer has been decided */
     let stamp = "", label = "";
     if(dead && !blank){ stamp = "nope"; label = why; }
     else if(settled && !dead){
       stamp = rejected ? "nope" : "yes";
-      label = (rejected ? "Rejected" : "Valid") + `<span class="n">${yes}–${no}</span>`;
+      label = rejected ? "Rejected"
+                       : `Valid<span class="n">+${v.points}</span>`;
     }
 
     /* only animate the first time a given verdict appears */
@@ -720,9 +860,9 @@ function renderVoting(){
 
     const stampHtml = stamp
       ? `<span class="stamp ${stamp}${slam}">${label}</span>` : "";
-    const right = (!stamp && !dead)
-      ? `<span class="tally">${yes} of ${yes + no}</span>`
-      : (blank ? `<span class="tally">${why}</span>` : "");
+    const right = blank ? `<span class="tally">${why}</span>`
+                : dead  ? ""
+                : `<span class="tally">${yes}–${no}</span>`;
 
     const buttons = dead ? "" :
       `<div class="vbtns">
@@ -731,7 +871,7 @@ function renderVoting(){
        </div>`;
 
     return `<div class="vote-row">
-              <span class="who">${escapeHtml(players[p] ? players[p].name : "?")}${p === me ? " (you)" : ""}</span>
+              <span class="who">${escapeHtml(nameOf(p))}${p === me ? " (you)" : ""}</span>
               <span class="said ${stamp ? "stamped" : ""}"><span class="txt">${text}</span>${stampHtml}</span>
               ${right}${buttons}
             </div>`;
@@ -768,12 +908,12 @@ function allVotesIn(ci){
   const answers = (room.answers && room.answers[room.round]) || {};
   const dupes = dupesFor(ci);
   const votes = ((room.votes && room.votes[room.round]) || {})[ci] || {};
-  const ids = playerIds();
-  return ids.every(owner=>{
+  const voters = activeIds().length ? activeIds() : playerIds();
+  return roundPlayers().every(owner=>{
     const raw = (answers[owner] && answers[owner][ci]) || "";
     if(!raw.trim() || dupes.includes(owner) || !validStart(raw)) return true;
     const cast = votes[owner] || {};
-    return ids.every(v => cast[v] !== undefined);
+    return voters.every(v => cast[v] !== undefined);
   });
 }
 
@@ -794,19 +934,9 @@ function tally(){
   const votes = (room.votes && room.votes[room.round]) || {};
   const gained = {};
 
-  playerIds().forEach(p=>{
+  roundPlayers().forEach(p=>{
     let pts = 0;
-    room.categories.forEach((cat, ci)=>{
-      const raw = (answers[p] && answers[p][ci]) || "";
-      if(!raw.trim()) return;
-      if(dupesFor(ci).includes(p)) return;
-      if(!validStart(raw)) return;
-      const cast = (votes[ci] && votes[ci][p]) || {};
-      const yes = Object.values(cast).filter(v => v === true).length;
-      const no  = Object.values(cast).filter(v => v === false).length;
-      if(no > yes) return;          /* majority rejected it */
-      pts++;
-    });
+    room.categories.forEach((cat, ci)=>{ pts += judge(p, ci).points; });
     gained[p] = pts;
   });
 
@@ -823,20 +953,47 @@ function renderScores(){
   const done = room.round >= room.rounds;
   const gained = (room.gained && room.gained[room.round]) || {};
   const rows = playerIds()
-    .map(p => ({ p, name: room.players[p].name, score: room.players[p].score || 0, got: gained[p] || 0 }))
-    .sort((a,b) => b.score - a.score);
+    .map(p => ({ p, name: nameOf(p), score: room.players[p].score || 0, got: gained[p] || 0 }))
+    .sort((a,b) => b.score - a.score || b.got - a.got);
 
   const top = rows.length ? rows[0].score : 0;
   const winners = rows.filter(r => r.score === top).map(r => r.name);
 
+  $("scoreKicker").textContent = done ? "Final scores" : `After round ${room.round} of ${room.rounds}`;
   $("scoreTitle").textContent = done
-    ? (winners.length > 1 ? "Tied: " + winners.join(" & ") : winners[0] + " wins")
-    : "After round " + room.round;
+    ? (winners.length > 1 ? "It's a tie — " + winners.join(" & ") : winners[0] + " wins")
+    : "";
 
   $("scoreList").innerHTML = rows.map(r=>
-    `<li><span>${escapeHtml(r.name)}</span>
-     <span><span class="tagpill">+${r.got}</span> <span class="num">${r.score}</span></span></li>`
-  ).join("");
+    `<li class="${r.score === top && done ? "lead" : ""}">
+       <span class="nm">${escapeHtml(r.name)}${r.p === me ? " (you)" : ""}</span>
+       <span class="got">+${r.got} this round</span>
+       <span class="tot">${r.score}</span>
+     </li>`).join("");
+
+  /* every answer from the round just played, and what it was worth */
+  const order = rows.slice().sort((a,b) => (b.p === me) - (a.p === me));
+  $("breakdown").innerHTML = order.map(r=>{
+    const lines = room.categories.map((cat, ci)=>{
+      const v = judge(r.p, ci);
+      const shown = v.raw.trim() ? escapeHtml(v.raw) : "—";
+      const badge = v.points
+        ? `<span class="pts win">+${v.points}</span>`
+        : `<span class="pts loss">${v.reason || "No points"}</span>`;
+      return `<div class="bd-row">
+                <span class="bd-cat">${escapeHtml(cat)}</span>
+                <span class="bd-ans ${v.points ? "" : "out"}">${shown}</span>
+                ${badge}
+              </div>`;
+    }).join("");
+    const scored = room.categories.filter((c,ci)=> judge(r.p, ci).points).length;
+    return `<div class="bd">
+              <div class="bd-head">
+                <span class="who2">${escapeHtml(r.name)}${r.p === me ? " (you)" : ""}</span>
+                <span class="sum">${scored} of ${room.categories.length} scored · +${r.got}</span>
+              </div>${lines}
+            </div>`;
+  }).join("");
 
   $("nextBtn").classList.toggle("hide", done || !isHost());
   $("againBtn").classList.toggle("hide", !done || !isHost());
@@ -854,6 +1011,7 @@ async function leaveRoom(){
 
   /* stop listening first so the removal doesn't re-render a half-gone room */
   if(unsub){ unsub(); unsub = null; }
+  if(connWatch){ connWatch(); connWatch = null; }
   clearInterval(clockTimer); clearInterval(cdTimer);
   clearTimeout(autoTimer); clearTimeout(endTimer); endTimer = null;
   clearTimeout(introTimer); clearTimeout(introTimer2);
@@ -891,9 +1049,7 @@ function playVoteIntro(){
 /* ---------- render ---------- */
 function render(){
   /* host left: promote the first remaining player */
-  if(room.hostId && !playerIds().includes(room.hostId) && playerIds()[0] === me){
-    update(roomRef, { hostId: me });
-  }
+  checkHost();
   $("hmeta").textContent = code ? "Room " + code + (isHost() ? " · host" : "") : "Multiplayer";
   $("leaveBtn").classList.toggle("hide", !code);
 
@@ -922,9 +1078,11 @@ function render(){
       $("setRounds").value = room.rounds;
       $("setCats").value = room.catCount;
     }
-    $("lobbyPlayers").innerHTML = playerIds().map(p=>
-      `<li><span>${escapeHtml(room.players[p].name)}</span>
-       ${p === room.hostId ? '<span class="tagpill">Host</span>' : ""}</li>`).join("");
+    $("lobbyPlayers").innerHTML = playerIds().map(p=>{
+      const away = room.players[p].online === false;
+      return `<li><span${away ? ' style="color:var(--mute)"' : ""}>${escapeHtml(room.players[p].name)}</span>
+        <span>${away ? '<span class="tagpill">Away</span> ' : ""}${p === room.hostId ? '<span class="tagpill">Host</span>' : ""}</span></li>`;
+    }).join("");
     $("startBtn").disabled = playerIds().length < 2;
     $("startNote").textContent = playerIds().length < 2 ? "Waiting for at least one more player." : "";
   }
@@ -944,7 +1102,7 @@ function render(){
     }
     const sub = (room.submitted && room.submitted[room.round]) || {};
     const n = Object.keys(sub).length;
-    if(n && !$("doneBtn").disabled) $("submitNote").textContent = `${n} of ${playerIds().length} finished.`;
+    if(n && !$("doneBtn").disabled) $("submitNote").textContent = `${n} of ${activeIds().length} finished.`;
 
     const paused = !!room.paused;
     $("pauseBtn").classList.toggle("hide", !isHost());
