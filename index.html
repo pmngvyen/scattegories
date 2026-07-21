@@ -3,824 +3,945 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scattergories</title>
+<title>Scattergories — Rooms</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0B0B0B;
-    --paper:#FFFFFF;
-    --rule:#D6D6D6;
-    --mute:#767676;
-    --wash:#F2F2F2;
+    --ink:#0B0B0B; --paper:#FFFFFF; --rule:#D6D6D6; --mute:#767676; --wash:#F2F2F2;
     --display:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
     --mono:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
-
   *,*::before,*::after{box-sizing:border-box;border-radius:0!important;}
-  html,body{margin:0;padding:0;height:100%;}
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:var(--display);
-    -webkit-font-smoothing:antialiased;
-    line-height:1.45;
-    padding:22px;
-    overflow:hidden;
-  }
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--display);line-height:1.45;
+    -webkit-font-smoothing:antialiased;padding:22px;}
   button,input,select{font:inherit;color:inherit;border-radius:0;}
   :focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
 
-  .frame{
-    height:100%;max-width:1680px;margin:0 auto;border:1px solid var(--ink);
-    display:flex;flex-direction:column;overflow:hidden;
-  }
-
-  /* ---------- masthead ---------- */
-  header{
-    display:flex;align-items:center;justify-content:space-between;gap:24px;
-    padding:clamp(14px,2.2vh,26px) 34px;border-bottom:1px solid var(--ink);flex-shrink:0;
-  }
+  .frame{max-width:1080px;margin:0 auto;border:1px solid var(--ink);min-height:calc(100vh - 44px);
+    display:flex;flex-direction:column;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:20px 30px;border-bottom:1px solid var(--ink);flex-wrap:wrap;}
+  .wordmark{font-size:clamp(24px,4vw,40px);font-weight:900;letter-spacing:-.045em;
+    text-transform:uppercase;margin:0;line-height:1;}
+  .headwrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
   .headlink{
     border:1px solid var(--ink);background:var(--paper);color:var(--ink);text-decoration:none;
     padding:8px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;
-    text-transform:uppercase;white-space:nowrap;
+    text-transform:uppercase;white-space:nowrap;cursor:pointer;line-height:1.3;
   }
   .headlink:hover{background:var(--ink);color:var(--paper);}
-  .wordmark{
-    font-size:clamp(26px,4.6vh,54px);font-weight:900;letter-spacing:-.045em;
-    text-transform:uppercase;margin:0;line-height:1;
+  .meta{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);}
+  main{flex:1;display:flex;flex-direction:column;}
+  .pad{padding:30px;}
+  .label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);
+    display:block;margin-bottom:8px;}
+  h2.sec{margin:0 0 18px;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;}
+  h2.big{
+    margin:0 0 6px;font-size:clamp(28px,4.4vw,42px);font-weight:900;letter-spacing:-.035em;
+    line-height:1;text-transform:none;
   }
-  .tag{
-    font-family:var(--mono);font-size:11px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--mute);
+  .lede{font-size:15px;color:var(--mute);margin:0 0 26px;font-weight:500;}
+
+  input[type=text],input[type=number]{border:1px solid var(--ink);background:var(--paper);
+    padding:11px 12px;font-family:var(--display);font-weight:500;font-size:15px;width:100%;}
+  input[type=text]::placeholder{color:#B0B0B0;}
+  .code-input{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.35em;
+    text-align:center;font-variant-numeric:tabular-nums;padding:14px 0 14px 12px;}
+
+  .btn{border:1px solid var(--ink);background:var(--paper);padding:13px 22px;cursor:pointer;
+    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;}
+  .btn:hover{background:var(--ink);color:var(--paper);}
+  .btn.solid{background:var(--ink);color:var(--paper);}
+  .btn.solid:hover{background:var(--paper);color:var(--ink);}
+  .btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .btn[disabled]:hover{background:var(--paper);color:var(--ink);}
+  .btn.solid[disabled]:hover{background:var(--ink);color:var(--paper);}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;}
+  .split > div{padding:30px;}
+  .split > div:first-child{border-right:1px solid var(--ink);}
+  @media (max-width:760px){
+    .split{grid-template-columns:1fr;}
+    .split > div:first-child{border-right:0;border-bottom:1px solid var(--ink);}
   }
 
-  /* ---------- main grid ---------- */
-  .board{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);flex:1;min-height:0;}
-  .rail{border-right:1px solid var(--ink);display:flex;flex-direction:column;min-height:0;}
-  .list-col{display:flex;flex-direction:column;min-height:0;}
+  .code-display{font-weight:900;font-size:clamp(48px,11vw,86px);letter-spacing:.14em;line-height:1;
+    font-variant-numeric:tabular-nums;margin:6px 0 4px;}
+  .letter-big{font-weight:900;font-size:clamp(64px,13vw,110px);line-height:.9;}
 
-  /* ---------- letter ---------- */
-  .letter-panel{
-    background:var(--paper);color:var(--ink);padding:clamp(14px,2vh,24px) 26px;
-    flex:0 0 44%;min-height:0;display:flex;flex-direction:column;position:relative;
-  }
-  .letter-panel .panel-label{
-    color:var(--mute);position:absolute;top:clamp(14px,2vh,24px);left:26px;right:26px;
-  }
-  .panel-label{
-    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .letter{
-    font-size:min(15vw,21vh);font-weight:900;letter-spacing:0;
-    line-height:.82;text-align:center;margin:0;user-select:none;
-    flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
-  }
-  .letter span{display:block;}
-  .reroll{
-    width:100%;background:var(--paper);border:1px solid var(--ink);padding:clamp(9px,1.4vh,13px) 0;
-    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;flex-shrink:0;
-  }
-  .reroll:hover{background:var(--ink);color:var(--paper);}
-  .letter.roll{animation:flick .34s steps(6) 1;}
-  @keyframes flick{0%{opacity:.15}50%{opacity:.55}100%{opacity:1}}
-  @media (prefers-reduced-motion:reduce){.letter.roll{animation:none}}
-  .letter-note{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
-    text-align:center;color:#9A9A9A;
-  }
+  ul.plain{list-style:none;margin:0;padding:0;}
+  ul.plain li{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:12px 0;border-bottom:1px solid var(--rule);}
+  ul.plain li:last-child{border-bottom:0;}
+  .tagpill{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    border:1px solid var(--ink);padding:3px 7px;}
+  .num{font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;font-size:20px;}
 
-  /* ---------- timer ---------- */
-  .timer-panel{
-    padding:clamp(14px,2vh,24px) 26px clamp(24px,3.8vh,42px);border-top:1px solid var(--rule);
-    flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;
-    gap:clamp(7px,1.2vh,13px);
-  }
-  .rail .timer-panel{border-top:1px solid var(--ink);}
-  .clock{
-    font-family:var(--display);font-weight:800;font-size:min(8vw,12vh);
-    letter-spacing:-.03em;line-height:1;margin:0;
-    font-variant-numeric:tabular-nums;font-feature-settings:"zero" 0,"ss01" 0;
-  }
-  .clock.done{animation:blink 1s steps(1) infinite;}
-  @keyframes blink{50%{opacity:.18}}
-  @media (prefers-reduced-motion:reduce){.clock.done{animation:none;}}
-  .track{height:4px;background:var(--wash);border:1px solid var(--rule);flex-shrink:0;}
-  .fill{height:100%;background:var(--ink);width:100%;transition:width .25s linear;}
+  .clock{font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;
+    font-size:clamp(34px,6vw,52px);line-height:1;}
+  .track{height:4px;background:var(--wash);border:1px solid var(--rule);margin-top:10px;}
+  .fill{height:100%;background:var(--ink);width:100%;transition:width .3s linear;}
 
-  .presets{display:flex;margin:0;border:1px solid var(--ink);}
-  .presets button{
-    flex:1;background:var(--paper);border:0;border-right:1px solid var(--ink);
-    padding:clamp(6px,1.1vh,9px) 0;font-family:var(--display);font-weight:600;
-    font-size:13px;cursor:pointer;letter-spacing:.04em;font-variant-numeric:tabular-nums;
-  }
-  .presets button:last-child{border-right:0;}
-  .presets button[aria-pressed="true"]{background:var(--ink);color:var(--paper);}
-  .presets button:hover{background:var(--wash);}
-  .presets button[aria-pressed="true"]:hover{background:var(--ink);}
+  ol.answers{list-style:none;margin:0;padding:0;counter-reset:c;}
+  ol.answers li{counter-increment:c;display:flex;align-items:center;gap:16px;
+    padding:11px 30px;border-bottom:1px solid var(--rule);}
+  ol.answers li::before{content:counter(c);font-weight:600;font-variant-numeric:tabular-nums;
+    color:#3D3D3D;min-width:30px;font-size:15px;}
+  ol.answers .cat{flex:1;font-weight:500;min-width:130px;}
+  ol.answers input{flex:1.1;border:0;border-bottom:1px solid var(--ink);padding:6px 2px;}
+  ol.answers input:focus{outline:none;background:var(--wash);}
 
-  .custom{display:flex;align-items:center;gap:8px;margin-top:0;}
-  .custom label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);}
-  .custom input{
-    width:74px;padding:6px 8px;border:1px solid var(--ink);background:var(--paper);
-    font-family:var(--display);font-weight:600;font-size:14px;text-align:center;
+  .vote-progress{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--mute);margin-bottom:10px;}
+  .vote-track{height:4px;background:var(--wash);border:1px solid var(--rule);margin-bottom:26px;}
+  .vote-track div{height:100%;background:var(--ink);transition:width .3s ease;}
+
+  .vote-cat{font-weight:800;font-size:clamp(24px,4.2vw,40px);letter-spacing:-.02em;line-height:1.1;
+    margin:0 0 6px;}
+  .vote-sub{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);margin:0 0 26px;}
+
+  .vote-row{display:flex;align-items:center;gap:20px;padding:18px 0;
+    border-bottom:1px solid var(--rule);flex-wrap:wrap;}
+  .vote-row:first-of-type{border-top:1px solid var(--ink);}
+  .who{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--mute);min-width:120px;}
+  .said{flex:1;font-weight:700;font-size:clamp(18px,2.6vw,26px);min-width:150px;letter-spacing:-.01em;}
+  .said.dead{text-decoration:line-through;color:var(--mute);font-weight:500;}
+  .vbtns{display:flex;gap:10px;}
+  .vbtn{border:1px solid var(--ink);background:var(--paper);padding:14px 30px;cursor:pointer;
+    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;min-width:110px;}
+  .vbtn:hover{background:var(--wash);}
+  .vbtn.on{background:var(--ink);color:var(--paper);}
+  .vbtn.on:hover{background:var(--ink);color:var(--paper);}
+  .tally{font-family:var(--mono);font-size:11.5px;color:var(--mute);letter-spacing:.1em;
+    text-transform:uppercase;min-width:96px;text-align:right;}
+
+  .note{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--mute);line-height:1.7;}
+  .warn{border:1px solid var(--ink);padding:22px;}
+  .warn code{font-family:var(--mono);font-size:12px;background:var(--wash);padding:1px 5px;}
+  .warn pre{font-family:var(--mono);font-size:11.5px;background:var(--wash);padding:14px;overflow:auto;
+    border:1px solid var(--rule);line-height:1.6;}
+  footer{border-top:1px solid var(--ink);padding:14px 30px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.06em;color:var(--mute);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .cd{
+    position:fixed;inset:0;background:var(--ink);color:var(--paper);z-index:60;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    opacity:1;transition:opacity .5s ease;
+  }
+  .cd.out{opacity:0;pointer-events:none;}
+  .fadein{animation:fadeIn .5s ease both;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){
+    .cd{transition:none;}
+    .fadein{animation:none;}
+  }
+  .cd-round{
+    font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:#9A9A9A;display:block;margin-bottom:14px;
+  }
+  .cd-num{
+    font-weight:900;font-size:min(46vh,42vw);line-height:.9;letter-spacing:-.04em;
     font-variant-numeric:tabular-nums;
   }
-  #rollCount{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;}
+  .cd-num.go{font-size:min(22vh,26vw);letter-spacing:-.02em;}
 
-  .controls{display:grid;grid-template-columns:1fr 1fr;margin-top:0;border:1px solid var(--ink);}
-  .controls button{
-    background:var(--paper);border:0;border-right:1px solid var(--ink);padding:clamp(15px,2.6vh,24px) 0;
-    font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  .verdict{
+    font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    border:1px solid currentColor;padding:5px 11px;white-space:nowrap;
   }
-  .controls button:last-child{border-right:0;}
-  .controls button:hover{background:var(--ink);color:var(--paper);}
-  .btn-primary{background:var(--ink)!important;color:var(--paper)!important;}
-  .btn-primary:hover{background:var(--paper)!important;color:var(--ink)!important;}
+  .verdict.ok{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .verdict.no{background:var(--paper);color:var(--mute);}
 
-  /* ---------- categories ---------- */
-  .list-head{
-    display:flex;justify-content:space-between;align-items:center;gap:16px;
-    padding:clamp(11px,1.7vh,18px) 32px;border-bottom:1px solid var(--ink);flex-shrink:0;
-  }
-  .list-head h2{
-    margin:0;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
-  }
-  .head-actions{display:flex;align-items:center;gap:10px;}
-  .head-actions .dd-btn,.ghost{
-    border:1px solid var(--ink);background:var(--paper);padding:6px 10px;
-    font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
-  }
-  .ghost:hover{background:var(--ink);color:var(--paper);}
-
-  /* custom dropdown */
-  .dd{position:relative;}
-  .dd-btn{display:flex;align-items:center;gap:10px;}
-  .dd-btn:hover,.dd.open .dd-btn{background:var(--ink);color:var(--paper);}
-  .caret{
-    width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
-    border-top:5px solid currentColor;display:block;
-  }
-  .dd.open .caret{border-top:0;border-bottom:5px solid currentColor;}
-  .dd-menu{
-    position:absolute;top:calc(100% + 4px);right:0;min-width:100%;z-index:20;
-    list-style:none;margin:0;padding:0;background:var(--paper);border:1px solid var(--ink);
-    display:none;
-  }
-  .dd.open .dd-menu{display:block;}
-  .dd-menu li{
-    padding:8px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;
-    text-transform:uppercase;cursor:pointer;white-space:nowrap;
-    border-bottom:1px solid var(--rule);
-  }
-  .dd-menu li:last-child{border-bottom:0;}
-  .dd-menu li:hover{background:var(--wash);}
-  .dd-menu li[aria-selected="true"]{background:var(--ink);color:var(--paper);}
-
-  ol.cats{
-    list-style:none;margin:0;padding:0;counter-reset:c;
-    height:100%;display:flex;flex-direction:column;
-  }
-  ol.cats li{
-    counter-increment:c;display:flex;align-items:center;gap:18px;
-    padding:0 32px;border-bottom:1px solid var(--rule);cursor:pointer;
-    position:relative;overflow:hidden;flex:1;min-height:0;
-  }
-  ol.cats li:last-child{border-bottom:0;}
-  ol.cats li:hover{background:var(--wash);}
-  ol.cats li::after{
-    content:"";position:absolute;inset:0;background:var(--ink);
-    transform-origin:right center;transform:scaleX(1);
-    transition:transform .5s cubic-bezier(.7,0,.2,1);
-    transition-delay:calc(var(--i) * 55ms);
-  }
-  ol.cats li span,ol.cats li::before{
-    opacity:0;transform:translateY(6px);
-    transition:opacity .45s ease,transform .45s cubic-bezier(.2,.8,.2,1);
-    transition-delay:calc(var(--i) * 55ms + 180ms);
-  }
-  ol.cats.revealed li::after{transform:scaleX(0);}
-  ol.cats.revealed li span,ol.cats.revealed li::before{opacity:1;transform:none;}
-  ol.cats:not(.revealed) li{cursor:default;pointer-events:none;}
-  ol.cats:not(.revealed) li:hover{background:transparent;}
-  @media (prefers-reduced-motion:reduce){
-    ol.cats li::after,ol.cats li span,ol.cats li::before{transition-duration:.01ms;transition-delay:0ms;}
-  }
-
-  .veil{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    pointer-events:none;transition:opacity .3s ease;
-  }
-  .veil span{
-    background:var(--ink);color:var(--paper);border:1px solid var(--paper);
-    padding:16px 30px;font-family:var(--mono);font-weight:500;
-    font-size:clamp(12px,1.6vh,15px);letter-spacing:.26em;text-transform:uppercase;
-    text-indent:.26em;
-  }
-  .cats-wrap{position:relative;flex:1;min-height:0;}
-  .cats-wrap.open .veil{opacity:0;}
-  ol.cats li::before{
-    content:counter(c);
-    font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;
-    font-size:clamp(14px,1.95vh,20px);letter-spacing:.02em;
-    color:#3D3D3D;min-width:38px;
-  }
-  ol.cats li span{font-size:clamp(14px,2.3vh,23px);font-weight:500;letter-spacing:-.01em;}
-  ol.cats li.struck span{text-decoration:line-through;color:var(--mute);}
-  ol.cats li.struck::before{color:var(--ink);}
-  .answer{
-    margin-left:auto;padding-left:18px;text-align:right;
-    font-family:var(--mono);font-size:clamp(11px,1.5vh,14px);
-    color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%;
-    opacity:0;transition:opacity .35s ease;transition-delay:calc(var(--i) * 45ms);
-  }
-  .answer.in{opacity:1;}
-  .ex-status{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--mute);
-  }
-
-  /* small screens fall back to a normal scrolling stack */
-  @media (max-width:900px),(max-height:520px){
-    html,body{height:auto;overflow:auto;}
-    body{padding:12px;}
-    .frame{height:auto;}
-    .board{grid-template-columns:1fr;}
-    .rail{border-right:0;border-bottom:1px solid var(--ink);}
-    .letter{font-size:min(40vw,30vh);padding:18px 0;}
-    ol.cats li{flex:0 0 auto;padding:14px 20px;}
-    .list-head,footer{padding-left:20px;padding-right:20px;}
-  }
-
-  footer{
-    padding:clamp(9px,1.4vh,15px) 32px;border-top:1px solid var(--ink);flex-shrink:0;
-    font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);
-    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
-  }
-  kbd{
-    font-family:var(--mono);border:1px solid var(--rule);padding:1px 5px;font-size:10.5px;color:var(--ink);
-  }
+  .hide{display:none!important;}
 </style>
 </head>
 <body>
 <div class="frame">
-
   <header>
     <h1 class="wordmark">Scattergories</h1>
-    <a class="headlink" href="scattergories-multiplayer.html">Play with friends</a>
+    <span class="headwrap">
+      <a class="headlink" href="scattergories.html">Solo generator</a>
+      <button class="headlink hide" id="leaveBtn">Leave room</button>
+      <span class="meta" id="hmeta">Multiplayer</span>
+    </span>
   </header>
 
-  <div class="board">
+  <main>
+    <!-- ============ config missing ============ -->
+    <section id="v-config" class="pad hide">
+      <div class="warn">
+        <h2 class="sec">One-time setup</h2>
+        <p class="note">
+          This page needs a Firebase Realtime Database to pass moves between players.
+          It is free and takes a few minutes.
+        </p>
+        <p class="note">
+          1. Go to console.firebase.google.com and create a project.<br>
+          2. Databases &amp; Storage → Realtime Database → Create database. Pick a region, choose <strong>test mode</strong>.<br>
+          3. Open the Rules tab straight away and publish the rules below — test mode expires after about a month and then blocks everything.<br>
+          4. Gear icon → Project settings → Your apps → Web (&lt;/&gt;) → register, then copy the config values.<br>
+          5. Paste them into the <code>FIREBASE_CONFIG</code> block near the top of this file's script.
+        </p>
+        <p class="note">
+          If <code>databaseURL</code> is missing from the snippet, copy it from the top of the Realtime Database
+          Data tab. Note this is <strong>Realtime Database</strong>, not Firestore.
+        </p>
+        <pre>{
+  "rules": {
+    "rooms": {
+      "$code": { ".read": true, ".write": true }
+    }
+  }
+}</pre>
+      </div>
+    </section>
 
-    <div class="rail">
-      <section class="letter-panel">
-        <div class="panel-label"><span>Letter</span><span id="rollCount">Round 01</span></div>
-        <div class="letter" id="letter" aria-live="polite"><span>A</span></div>
-        <button class="reroll" id="rerollBtn">Reroll letter</button>
-      </section>
-
-      <section class="timer-panel">
-        <div class="panel-label" style="color:var(--mute)"><span>Timer</span><span id="state">Ready</span></div>
-        <div class="clock" id="clock">2:00</div>
-        <div class="track"><div class="fill" id="fill"></div></div>
-
-        <div class="presets" role="group" aria-label="Timer presets">
-          <button data-sec="60" aria-pressed="false">1:00</button>
-          <button data-sec="120" aria-pressed="true">2:00</button>
-          <button data-sec="180" aria-pressed="false">3:00</button>
-          <button data-sec="300" aria-pressed="false">5:00</button>
+    <!-- ============ home ============ -->
+    <section id="v-home" class="split hide">
+      <div>
+        <h2 class="big">Create a room</h2>
+        <p class="lede">Start a new game and invite everyone else.</p>
+        <label class="label" for="nameA">Your name</label>
+        <input type="text" id="nameA" maxlength="14" placeholder="Name">
+        <div class="row" style="margin-top:18px">
+          <button class="btn solid" id="createBtn">Create room</button>
         </div>
-
-        <div class="custom">
-          <label for="mins">Custom</label>
-          <input id="mins" type="number" min="0" max="59" value="2" aria-label="Minutes">
-          <span class="tag">min</span>
-          <input id="secs" type="number" min="0" max="59" value="0" aria-label="Seconds">
-          <span class="tag">sec</span>
+        <p class="note" style="margin-top:20px">
+          You will get a four digit code. Everyone types that code to join.
+        </p>
+      </div>
+      <div>
+        <h2 class="big">Join a room</h2>
+        <p class="lede">Already have a code from a friend? Enter it here.</p>
+        <label class="label" for="nameB">Your name</label>
+        <input type="text" id="nameB" maxlength="14" placeholder="Name">
+        <label class="label" for="codeIn" style="margin-top:16px">Room code</label>
+        <input type="text" id="codeIn" class="code-input" maxlength="4" inputmode="numeric" placeholder="0000">
+        <div class="row" style="margin-top:18px">
+          <button class="btn" id="joinBtn">Join</button>
         </div>
+        <p class="note" id="joinErr" style="margin-top:16px"></p>
+      </div>
+    </section>
 
-        <div class="controls">
-          <button id="startBtn" class="btn-primary">Start</button>
-          <button id="resetBtn">Reset</button>
-        </div>
-      </section>
-    </div>
+    <!-- ============ lobby ============ -->
+    <section id="v-lobby" class="split hide">
+      <div>
+        <span class="label">Room code</span>
+        <div class="code-display" id="lobbyCode">0000</div>
+        <p class="note">Share this with your friends.</p>
 
-    <div class="list-col">
-      <div class="list-head">
-        <h2>Categories</h2>
-        <span class="ex-status" id="exStatus"></span>
-        <div class="head-actions">
-          <div class="dd" id="countDD">
-            <button class="dd-btn" id="countBtn" aria-haspopup="listbox" aria-expanded="false">
-              <span id="countLabel">12 items</span><span class="caret"></span>
-            </button>
-            <ul class="dd-menu" id="countMenu" role="listbox" aria-label="Number of categories">
-              <li role="option" data-value="6" aria-selected="false">6 items</li>
-              <li role="option" data-value="10" aria-selected="false">10 items</li>
-              <li role="option" data-value="12" aria-selected="true">12 items</li>
-              <li role="option" data-value="16" aria-selected="false">16 items</li>
-            </ul>
+        <h2 class="sec" style="margin-top:28px">Settings</h2>
+        <div id="hostSettings">
+          <label class="label" for="setSeconds">Seconds per round</label>
+          <input type="number" id="setSeconds" min="15" max="600" step="5" value="120">
+          <label class="label" for="setRounds" style="margin-top:14px">Rounds</label>
+          <input type="number" id="setRounds" min="1" max="10" value="3">
+          <label class="label" for="setCats" style="margin-top:14px">Categories per round</label>
+          <input type="number" id="setCats" min="4" max="16" value="10">
+          <div class="row" style="margin-top:20px">
+            <button class="btn solid" id="startBtn">Start game</button>
           </div>
-          <button class="ghost" id="newRound">New round</button>
+          <p class="note" style="margin-top:14px" id="startNote"></p>
+        </div>
+        <p class="note hide" id="waitNote">Waiting for the host to start.</p>
+      </div>
+      <div>
+        <h2 class="sec">Players</h2>
+        <ul class="plain" id="lobbyPlayers"></ul>
+      </div>
+    </section>
+
+    <!-- ============ playing ============ -->
+    <section id="v-play" class="hide">
+      <div class="split" style="border-bottom:1px solid var(--ink)">
+        <div>
+          <span class="label">Letter</span>
+          <div class="letter-big" id="playLetter">A</div>
+        </div>
+        <div>
+          <span class="label"><span id="roundLabel">Round 1</span></span>
+          <div class="clock" id="playClock">2:00</div>
+          <div class="track"><div class="fill" id="playFill"></div></div>
+          <div class="row" style="margin-top:18px">
+            <button class="btn solid" id="doneBtn">I'm done</button>
+            <button class="btn" id="pauseBtn">Pause</button>
+          </div>
+          <p class="note" style="margin-top:12px" id="submitNote"></p>
         </div>
       </div>
-      <div class="cats-wrap" id="catsWrap">
-        <ol class="cats" id="cats"></ol>
-        <div class="veil" id="veil"><span>Press start to reveal</span></div>
-      </div>
-    </div>
+      <ol class="answers" id="answerList"></ol>
+    </section>
 
-  </div>
+    <!-- ============ voting ============ -->
+    <section id="v-vote" class="pad hide">
+      <div class="vote-progress">
+        <span id="voteRound">Round 1</span>
+        <span id="voteCount">Category 1 of 10</span>
+      </div>
+      <div class="vote-track"><div id="voteFill" style="width:0%"></div></div>
+
+      <h2 class="vote-cat" id="voteCat">Category</h2>
+      <p class="vote-sub" id="voteSub">Letter A</p>
+
+      <div id="voteRows"></div>
+
+      <div class="row" style="margin-top:28px">
+        <button class="btn" id="prevCatBtn">Back</button>
+        <button class="btn solid" id="nextCatBtn">Next category</button>
+      </div>
+      <p class="note" style="margin-top:14px" id="voteNote"></p>
+    </section>
+
+    <!-- ============ scores ============ -->
+    <section id="v-scores" class="pad hide">
+      <h2 class="sec" id="scoreTitle">Scores</h2>
+      <ul class="plain" id="scoreList" style="max-width:520px"></ul>
+      <div class="row" style="margin-top:26px">
+        <button class="btn solid hide" id="nextBtn">Next round</button>
+        <button class="btn hide" id="againBtn">Play again</button>
+        <button class="btn hide" id="leaveBtn2">Leave room</button>
+      </div>
+      <p class="note" style="margin-top:14px" id="scoreNote"></p>
+    </section>
+  </main>
 
   <footer>
-    <span><kbd>N</kbd> new round · <kbd>L</kbd> reroll letter · <kbd>Space</kbd> start or pause · <kbd>R</kbd> reset</span>
-    <span>Click a category to cross it off</span>
+    <span id="footLeft">Not connected</span>
+    <span>Duplicate answers score nothing</span>
   </footer>
 </div>
 
-<script>
-/* ---------------- letters ---------------- */
-const LETTERS = "ABCDEFGHIJKLMNOPRSTW".split(""); // Q,U,V,X,Y,Z omitted
+<div id="voteIntro" class="cd hide" style="z-index:58">
+  <div>
+    <span class="cd-round" id="voteIntroRound">Round 1</span>
+    <div class="cd-num go">Voting</div>
+    <span class="cd-round" style="margin:18px 0 0">Time is up — decide what counts</span>
+  </div>
+</div>
 
-/* ---------------- categories ---------------- */
+<div id="pauseOv" class="cd hide" style="z-index:55">
+  <div>
+    <span class="cd-round" id="pauseWho">Paused</span>
+    <div class="cd-num go">Paused</div>
+    <div class="row" style="justify-content:center;margin-top:26px">
+      <button class="btn solid" id="resumeBtn" style="background:var(--paper);color:var(--ink)">Resume</button>
+    </div>
+    <span class="cd-round hide" id="pauseHint" style="margin-top:22px">Waiting for the host to resume</span>
+  </div>
+</div>
+
+<div id="cd" class="cd hide">
+  <div>
+    <span class="cd-round" id="cdRound">Round 1</span>
+    <div class="cd-num" id="cdNum">3</div>
+  </div>
+</div>
+
+<script type="module">
+/* ================================================================
+   PASTE YOUR FIREBASE CONFIG HERE
+   ================================================================ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyCrLWdENV3wC43jty53S-5cTjQg52qZTvU",
+  authDomain:        "scattegories-a2a8e.firebaseapp.com",
+  databaseURL:       "https://scattegories-a2a8e-default-rtdb.firebaseio.com",
+  projectId:         "scattegories-a2a8e",
+  storageBucket:     "scattegories-a2a8e.firebasestorage.app",
+  messagingSenderId: "1015102505999",
+  appId:             "1:1015102505999:web:711d104bc3371d366e8f7a"
+};
+/* ================================================================ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const $ = id => document.getElementById(id);
+const LETTERS = "ABCDEFGHIJKLMNOPRSTW".split("");
 const CATEGORIES = [
-"Action words","Animals","Bands and musical groups","Board game pieces",
-"Bodies of water","Book titles","Boys' names","Breakfast foods",
-"Card and board games","Cars and car brands","Cartoon characters","Cities around the world",
-"Colors","Countries","Excuses for missing work","Famous duos",
-"Famous landmarks","Farm animals","Flowers","Foods",
-"Fruits","Girls' names","Halloween costumes","Historical figures",
-"Household chores","Ice cream flavors","Insects","Items in a suitcase",
-"Kinds of birds","Kinds of pain","Kinds of stores","Kitchen appliances",
-"Last names","Magazines and newspapers","Movie titles","Musical instruments",
-"Nicknames","Occupations","Ocean creatures","Parts of the body",
-"Pet names","Reasons to be late","Reasons to call a friend","Reasons to leave a party early",
-"Reasons to smile","Restaurant names","Sandwich fillings","School subjects",
-"School supplies","Something in a junk drawer","Something people are allergic to","Something you can't buy",
-"Something you charge","Something you collect","Something you do before bed","Something you do in the car",
-"Something you do in the morning","Something you do standing up","Something you fold","Something you inherited",
-"Something you keep hidden","Something you rent","Something you replace","Something you'd find in a car",
-"Something you'd find under a bed","Something you'd take camping","Something you'd take on a plane","Something you're afraid of",
-"Song titles","Sports","Sports equipment","Store names",
-"Streets and street names","TV shows","Terms of endearment","Things at a beach",
-"Things at a campsite","Things at a circus","Things at a construction site","Things at a farmers market",
-"Things at a gas station","Things at a hardware store","Things at a library","Things at a picnic",
-"Things at a supermarket","Things at a wedding","Things at a zoo","Things at an airport",
-"Things in a barn","Things in a bathroom","Things in a city","Things in a classroom",
-"Things in a desk drawer","Things in a diner","Things in a first aid kit","Things in a fridge",
-"Things in a garage","Things in a garden","Things in a gym","Things in a hospital",
-"Things in a hospital room","Things in a hotel room","Things in a kitchen","Things in a lunchbox",
-"Things in a museum","Things in a park","Things in a purse","Things in a toolbox",
-"Things in a wallet","Things in an office","Things in the sky","Things made of metal",
-"Things that are cold","Things that are free","Things that are loud","Things that are man-made",
-"Things that are noisy","Things that are round","Things that are sharp","Things that are soft",
-"Things that are sticky","Things that come in a box","Things that come in pairs","Things that fly",
-"Things that grow","Things that melt","Things that smell good","Things with a screen",
-"Things you buy for a new home","Things you can climb","Things you can hold in one hand","Things you can pour",
-"Things you can throw","Things you can wash","Things you do at a party","Things you do at school",
-"Things you do at the beach","Things you do with your hands","Things you find in a forest","Things you find in a pocket",
-"Things you find in a school","Things you find on a map","Things you plug in","Things you save up for",
-"Things you shout","Things you wear","Tools","Trees and plants",
-"Types of bread","Types of candy","Types of dance","Types of drink",
-"Types of fabric","Types of parties","Types of sandwiches","Types of shoes",
-"Types of soup","Types of stores at a mall","Types of weather","U.S. cities",
-"Vegetables","Video games","Ways to get around","Weather words",
-"Words in a fairy tale","Words in a love song","Words in a newspaper headline","Words on a menu",
-"Words shouted at a game","Words that describe a house","Words that describe a person","Words that describe food",
-"Words that describe music","Words that end in -ing","Words that rhyme with each other","Words used at work",
-"Words used in cooking","Words used in sports","Words with double letters","Words you'd hear on the news"
+  "Action words","Animals","Bands and musical groups","Board game pieces",
+  "Bodies of water","Book titles","Boys' names","Breakfast foods",
+  "Card and board games","Cars and car brands","Cartoon characters","Cities around the world",
+  "Colors","Countries","Excuses for missing work","Famous duos",
+  "Famous landmarks","Farm animals","Flowers","Foods",
+  "Fruits","Girls' names","Halloween costumes","Historical figures",
+  "Household chores","Ice cream flavors","Insects","Items in a suitcase",
+  "Kinds of birds","Kinds of pain","Kinds of stores","Kitchen appliances",
+  "Last names","Magazines and newspapers","Movie titles","Musical instruments",
+  "Nicknames","Occupations","Ocean creatures","Parts of the body",
+  "Pet names","Reasons to be late","Reasons to call a friend","Reasons to leave a party early",
+  "Reasons to smile","Restaurant names","Sandwich fillings","School subjects",
+  "School supplies","Something in a junk drawer","Something people are allergic to","Something you can't buy",
+  "Something you charge","Something you collect","Something you do before bed","Something you do in the car",
+  "Something you do in the morning","Something you do standing up","Something you fold","Something you inherited",
+  "Something you keep hidden","Something you rent","Something you replace","Something you'd find in a car",
+  "Something you'd find under a bed","Something you'd take camping","Something you'd take on a plane","Something you're afraid of",
+  "Song titles","Sports","Sports equipment","Store names",
+  "Streets and street names","TV shows","Terms of endearment","Things at a beach",
+  "Things at a campsite","Things at a circus","Things at a construction site","Things at a farmers market",
+  "Things at a gas station","Things at a hardware store","Things at a library","Things at a picnic",
+  "Things at a supermarket","Things at a wedding","Things at a zoo","Things at an airport",
+  "Things in a barn","Things in a bathroom","Things in a city","Things in a classroom",
+  "Things in a desk drawer","Things in a diner","Things in a first aid kit","Things in a fridge",
+  "Things in a garage","Things in a garden","Things in a gym","Things in a hospital",
+  "Things in a hospital room","Things in a hotel room","Things in a kitchen","Things in a lunchbox",
+  "Things in a museum","Things in a park","Things in a purse","Things in a toolbox",
+  "Things in a wallet","Things in an office","Things in the sky","Things made of metal",
+  "Things that are cold","Things that are free","Things that are loud","Things that are man-made",
+  "Things that are noisy","Things that are round","Things that are sharp","Things that are soft",
+  "Things that are sticky","Things that come in a box","Things that come in pairs","Things that fly",
+  "Things that grow","Things that melt","Things that smell good","Things with a screen",
+  "Things you buy for a new home","Things you can climb","Things you can hold in one hand","Things you can pour",
+  "Things you can throw","Things you can wash","Things you do at a party","Things you do at school",
+  "Things you do at the beach","Things you do with your hands","Things you find in a forest","Things you find in a pocket",
+  "Things you find in a school","Things you find on a map","Things you plug in","Things you save up for",
+  "Things you shout","Things you wear","Tools","Trees and plants",
+  "Types of bread","Types of candy","Types of dance","Types of drink",
+  "Types of fabric","Types of parties","Types of sandwiches","Types of shoes",
+  "Types of soup","Types of stores at a mall","Types of weather","U.S. cities",
+  "Vegetables","Video games","Ways to get around","Weather words",
+  "Words in a fairy tale","Words in a love song","Words in a newspaper headline","Words on a menu",
+  "Words shouted at a game","Words that describe a house","Words that describe a person","Words that describe food",
+  "Words that describe music","Words that end in -ing","Words that rhyme with each other","Words used at work",
+  "Words used in cooking","Words used in sports","Words with double letters","Words you'd hear on the news"
 ];
 
-/* ---------------- answer library ---------------- */
-const LETTER_ORDER = "ABCDEFGHIJKLMNOPRSTW";
-/* ANSWERS-START */
-const ANSWERS = {
-"Action words":"ask|build|carry|dance|eat|fold|grab|hop|imagine|jump|kick|laugh|march|nod|open|push|run|sing|throw|walk",
-"Animals":"antelope|bear|cat|deer|elephant|fox|goat|horse|iguana|jaguar|kangaroo|lion|moose|newt|otter|pig|rabbit|snake|tiger|wolf",
-"Bands and musical groups":"ABBA|Beatles|Coldplay|Doors|Eagles|Foo Fighters|Green Day|Heart|INXS|Journey|Kiss|Linkin Park|Metallica|Nirvana|Oasis|Pink Floyd|Radiohead|Sublime|Toto|Weezer",
-"Board game pieces":"arrow token|board|card|dice|eraser pencil|figurines|game cards|houses|instructions|jokers|king|little dog|money|numbered chips|order-of-play marker|pawns|rulebook|spinner|timer|wooden cubes",
-"Bodies of water":"Atlantic|Baltic Sea|Caribbean|Danube|Erie|fjord|Ganges|Hudson|Indian Ocean|Jordan River|Kennebec River|Lake Michigan|Mediterranean|Nile|Ohio River|Pacific|Rhine|Seine|Thames|Wabash River",
-"Book titles":"Anne of Green Gables|Beloved|Carrie|Dracula|Emma|Frankenstein|Gone Girl|Hamlet|It|Jane Eyre|Kidnapped|Lolita|Matilda|Nineteen Eighty-Four|Oliver Twist|Persuasion|Rebecca|Slaughterhouse-Five|Twilight|Walden",
-"Boys' names":"Aaron|Ben|Carl|David|Ethan|Frank|George|Henry|Ian|Jacob|Kevin|Liam|Michael|Noah|Oscar|Peter|Ryan|Sam|Thomas|William",
-"Breakfast foods":"avocado toast|bacon|cereal|doughnut|eggs|French toast|granola|hash browns|instant oatmeal|jam|kippers|latte|muffin|Nutella toast|omelet|pancakes|raisin bran|sausage|toast|waffles",
-"Card and board games":"Apples to Apples|Battleship|Clue|dominoes|Exploding Kittens|Farkle|Go Fish|Hearts|Iota|Jenga|Kings in the Corner|Life|Monopoly|Nertz|Old Maid|poker|Risk|Scrabble|Trouble|War",
-"Cars and car brands":"Audi|BMW|Chevrolet|Dodge|Edsel|Ford|GMC|Honda|Infiniti|Jeep|Kia|Lexus|Mazda|Nissan|Oldsmobile|Porsche|Renault|Subaru|Toyota|Willys",
-"Cartoon characters":"Arthur|Bugs Bunny|Charlie Brown|Daffy Duck|Elmer Fudd|Fred Flintstone|Goofy|Homer Simpson|Inspector Gadget|Jerry|Kim Possible|Linus|Mickey Mouse|Nemo|Olive Oyl|Popeye|Road Runner|Scooby-Doo|Tweety|Woody Woodpecker",
-"Cities around the world":"Amsterdam|Berlin|Cairo|Dublin|Edinburgh|Florence|Geneva|Helsinki|Istanbul|Jakarta|Kyoto|Lisbon|Madrid|Nairobi|Oslo|Paris|Rome|Seoul|Tokyo|Warsaw",
-"Colors":"amber|blue|crimson|denim|emerald|fuchsia|gold|hazel|indigo|jade|khaki|lavender|magenta|navy|olive|purple|red|silver|teal|white",
-"Countries":"Argentina|Brazil|Canada|Denmark|Egypt|France|Germany|Hungary|India|Japan|Kenya|Laos|Mexico|Norway|Oman|Peru|Romania|Spain|Turkey|Wales",
-"Excuses for missing work":"allergies|bad back|car broke down|doctor's appointment|emergency at home|flu|got food poisoning|headache|ill|jury duty|kid is sick|lost my voice|migraine|no childcare|out sick|pipe burst|root canal|stomach bug|toothache|wisdom teeth",
-"Famous duos":"Abbott and Costello|Batman and Robin|Calvin and Hobbes|Dumb and Dumber|Ernie and Bert|Frodo and Sam|Garfield and Odie|Han and Chewie|Ike and Tina|Jekyll and Hyde|Kirk and Spock|Lilo and Stitch|Mario and Luigi|Nick and Nora|Oscar and Felix|Penn and Teller|Romeo and Juliet|Sherlock and Watson|Tom and Jerry|Woody and Buzz",
-"Famous landmarks":"Arc de Triomphe|Big Ben|Colosseum|Downing Street|Eiffel Tower|Forbidden City|Great Wall|Hoover Dam|Iguazu Falls|Jefferson Memorial|Kremlin|Lincoln Memorial|Mount Rushmore|Niagara Falls|Old Faithful|Parthenon|Rialto Bridge|Stonehenge|Taj Mahal|Westminster Abbey",
-"Farm animals":"alpaca|bull|cow|donkey|ewe|foal|goat|horse|Indian Runner duck|jenny|kid|llama|mule|nanny goat|ox|pig|rooster|sheep|turkey|workhorse",
-"Flowers":"aster|begonia|carnation|daisy|edelweiss|freesia|gardenia|hyacinth|iris|jasmine|kalanchoe|lily|marigold|narcissus|orchid|peony|rose|sunflower|tulip|wisteria",
-"Foods":"apple|bread|cheese|doughnut|eggs|fish|grapes|ham|ice cream|jam|kale|lasagna|muffin|noodles|oatmeal|pizza|rice|soup|tacos|waffles",
-"Fruits":"apple|banana|cherry|date|elderberry|fig|grape|honeydew|Indian gooseberry|jackfruit|kiwi|lemon|mango|nectarine|orange|peach|raspberry|strawberry|tangerine|watermelon",
-"Girls' names":"Amy|Beth|Clara|Diana|Emma|Fiona|Grace|Hannah|Iris|Julia|Kate|Lily|Maria|Nina|Olivia|Paige|Rachel|Sophie|Tara|Wendy",
-"Halloween costumes":"astronaut|bat|clown|devil|elf|firefighter|ghost|hockey player|Indiana Jones|jester|knight|lion|mummy|ninja|ogre|pirate|robot|skeleton|troll|witch",
-"Historical figures":"Amelia Earhart|Beethoven|Cleopatra|Darwin|Einstein|Ferdinand Magellan|Gandhi|Harriet Tubman|Isaac Newton|Joan of Arc|King Tut|Lincoln|Marie Curie|Napoleon|Otto von Bismarck|Plato|Rosa Parks|Socrates|Tesla|Washington",
-"Household chores":"answering mail|bathing the dog|cooking|dusting|emptying the trash|folding laundry|gardening|hanging clothes|ironing|junk removal|kitchen cleanup|laundry|mopping|neatening up|organizing|polishing|raking|sweeping|tidying|washing dishes",
-"Ice cream flavors":"almond|butter pecan|cookies and cream|dulce de leche|espresso|French vanilla|green tea|honeycomb|Italian rum|jamoca almond fudge|Kahlua fudge|lemon sorbet|mint chip|Neapolitan|orange sherbet|pistachio|rocky road|strawberry|toffee|walnut",
-"Insects":"ant|beetle|cricket|dragonfly|earwig|firefly|grasshopper|hornet|inchworm|June bug|katydid|ladybug|moth|no-see-um|owlfly|praying mantis|roach|stink bug|termite|wasp",
-"Items in a suitcase":"adapter|belt|charger|deodorant|earplugs|flip-flops|glasses|hairbrush|inhaler|jeans|keys|laptop|makeup|nail clippers|outfits|passport|razor|socks|toothbrush|wallet",
-"Kinds of birds":"albatross|blue jay|cardinal|dove|eagle|finch|goose|hawk|ibis|jay|kingfisher|lark|magpie|nightingale|owl|pelican|robin|sparrow|toucan|wren",
-"Kinds of pain":"aching|burning|cramping|dull|earache|fleeting|gnawing|headache|intense|jabbing|knifelike|lingering|migraine|numbing|overwhelming|piercing|radiating|stabbing|throbbing|white-hot",
-"Kinds of stores":"antique shop|bakery|candy store|deli|electronics store|florist|grocery store|hardware store|ice cream shop|jewelry store|kiosk|liquor store|market|newsstand|optician|pharmacy|record store|salon|toy store|wine shop",
-"Kitchen appliances":"air fryer|blender|coffee maker|dishwasher|electric kettle|food processor|griddle|hot plate|ice maker|juicer|kettle|lemon juicer|microwave|nonstick skillet|oven|pressure cooker|rice cooker|stove|toaster|waffle iron",
-"Last names":"Anderson|Brown|Clark|Davis|Evans|Foster|Garcia|Harris|Ingram|Jackson|King|Lewis|Miller|Nelson|Owens|Parker|Reed|Smith|Taylor|Wilson",
-"Magazines and newspapers":"Atlantic Monthly|Boston Globe|Cosmopolitan|Daily News|Economist|Forbes|Guardian|Harper's|Investor's Business Daily|Journal of Commerce|Kiplinger's|Life|Money|Newsweek|Observer|People|Rolling Stone|Sports Illustrated|Time|Wired",
-"Movie titles":"Alien|Babe|Casablanca|Dune|Elf|Fargo|Ghost|Heat|Inception|Jaws|King Kong|Labyrinth|Matilda|Nope|Oldboy|Psycho|Rocky|Shrek|Titanic|Wall-E",
-"Musical instruments":"accordion|banjo|cello|drums|euphonium|flute|guitar|harp|Irish bouzouki|jug|keyboard|lute|mandolin|nose flute|oboe|piano|recorder|saxophone|trumpet|whistle",
-"Nicknames":"Ace|Buddy|Champ|Doc|Ed|Fitz|Gus|Hank|Izzy|Junior|Kit|Lefty|Max|Nate|Ozzie|Pete|Red|Slim|Tank|Whiz",
-"Occupations":"architect|baker|chef|dentist|electrician|farmer|gardener|hairdresser|illustrator|janitor|kindergarten teacher|lawyer|mechanic|nurse|optometrist|pilot|realtor|surgeon|teacher|welder",
-"Ocean creatures":"anchovy|barracuda|clam|dolphin|eel|flounder|grouper|halibut|isopod|jellyfish|krill|lobster|manta ray|narwhal|octopus|puffer fish|ray|shark|tuna|whale",
-"Parts of the body":"ankle|back|chin|diaphragm|elbow|foot|gums|hand|intestine|jaw|knee|liver|mouth|neck|ovary|palm|ribs|shoulder|thumb|wrist",
-"Pet names":"Ace|Bella|Coco|Duke|Ellie|Finn|Ginger|Hazel|Ivy|Jasper|Kiki|Luna|Max|Nala|Oreo|Peanut|Rocky|Sadie|Toby|Willow",
-"Reasons to be late":"alarm never went off|bad weather|car trouble|dentist appointment|emergency|flat tire|got lost|hit traffic|ice on the road|jury duty|kid was sick|lost my keys|missed the bus|no parking|overslept|power outage|road closed|slept in|traffic|wrong turn",
-"Reasons to call a friend":"advice|birthday|catch up|directions|emergency|favor|gossip|help moving|invitation|joke|keys locked in car|lonely|make plans|news|old times|party planning|ride needed|share good news|to vent|weekend plans",
-"Reasons to leave a party early":"allergies|babysitter|curfew|dog needs walking|exhausted|feeling sick|got bored|headache|I have work early|job in the morning|kids at home|long drive|migraine|no one I know|out of small talk|parking meter|ran out of energy|snowstorm|too loud|work tomorrow",
-"Reasons to smile":"anniversaries|babies|candy|dogs|excellent news|friends|good weather|holidays|ice cream|jokes|kind words|laughter|music|new job|old photos|puppies|reunions|sunshine|thank-you notes|weddings",
-"Restaurant names":"Applebee's|Burger King|Chipotle|Denny's|El Pollo Loco|Five Guys|Golden Corral|Hardee's|IHOP|Jack in the Box|KFC|Long John Silver's|McDonald's|Nando's|Olive Garden|Panera|Red Lobster|Subway|Taco Bell|Wendy's",
-"Sandwich fillings":"avocado|bacon|cheese|deli turkey|egg salad|falafel|grilled onions|ham|Italian sausage|jam|ketchup|lettuce|mayo|nut butter|olives|pickles|roast beef|salami|tomato|watercress",
-"School subjects":"algebra|biology|chemistry|drama|English|French|geography|history|Italian|journalism|kinesiology|Latin|math|nutrition|orchestra|physics|reading|science|trigonometry|writing",
-"School supplies":"art supplies|binder|crayons|dividers|erasers|folders|glue stick|highlighters|index cards|journal|kneaded eraser|lunch box|markers|notebook|organizer|pencils|ruler|scissors|tape|whiteboard markers",
-"Something in a junk drawer":"AA batteries|birthday candles|coupons|dead pens|expired coupons|flashlight|glue|hair ties|instruction manuals|jar lids|keys|lighters|matches|nails|old chargers|paper clips|rubber bands|scissors|takeout menus|washers",
-"Something people are allergic to":"almonds|bee stings|cats|dust|eggs|fish|gluten|hay|iodine|jellyfish stings|kiwi|latex|milk|nuts|oats|peanuts|ragweed|shellfish|tree pollen|wheat",
-"Something you can't buy":"affection|birthright|character|dignity|experience|friendship|good health|happiness|integrity|joy|kindness|love|memories|nostalgia|old age|patience|respect|self-worth|time|wisdom",
-"Something you charge":"AirPods|battery pack|camera|drone|electric car|fitness tracker|game controller|headphones|iPad|jump starter|Kindle|laptop|mouse|night light|outdoor speaker|phone|razor|smartwatch|tablet|wireless speaker",
-"Something you collect":"art|baseball cards|coins|dolls|earrings|figurines|glassware|hats|insect specimens|jerseys|keychains|license plates|magnets|newspaper clippings|ornaments|postcards|records|stamps|thimbles|wine",
-"Something you do before bed":"apply lotion|brush teeth|check the locks|dim the lights|eat a snack|floss|get pajamas on|hug the kids|ice your knee|journal|kiss goodnight|lock the door|meditate|night reading|open a window|pray|read|set an alarm|take medicine|wash your face",
-"Something you do in the car":"adjust the mirror|buckle up|change the radio|drive|eat|fiddle with the AC|give directions|honk|idle in traffic|jam out|keep an eye out|listen to music|merge|navigate|open the window|park|reverse|sing|talk|wave",
-"Something you do in the morning":"alarm goes off|brush teeth|coffee|dress|eat breakfast|feed the dog|get ready|hit snooze|iron a shirt|jog|kiss goodbye|listen to news|make the bed|news check|open the blinds|pack lunch|read the paper|shower|take vitamins|wake up",
-"Something you do standing up":"applaud|brush your teeth|cook|dance|exercise|fold laundry|grill|hug|iron|jump rope|knead dough|lecture|mow the lawn|nail a picture up|order coffee|paint|read a menu|sing|toast|wait in line",
-"Something you fold":"aprons|blanket|clothes|dough|envelope|flag|gift wrap|handkerchief|ironing board|jeans|kitchen towel|laundry|map|napkin|origami|paper|road map|shirt|towel|washcloth",
-"Something you inherited":"antiques|bad knees|china|debt|estate|farmland|grandfather clock|house|illness risk|jewelry|knives|land|money|nose shape|old letters|photographs|recipes|silverware|temper|watch",
-"Something you keep hidden":"anniversary gift|birthday present|cash|diary|emergency key|feelings|grudge|hiding spot|internet history|jewelry|keepsake|love letters|money|nest egg|old photos|passwords|regrets|secrets|treasure|will",
-"Something you rent":"apartment|bike|car|DVD|equipment|furniture|golf clubs|house|ice skates|jet ski|kayak|limo|moving truck|nail gun|office space|paddleboard|room|storage unit|tuxedo|wetsuit",
-"Something you replace":"air filter|batteries|carpet|doorknob|engine oil|furnace filter|garbage bag|headlight|ink cartridge|jumper cables|keyboard|lightbulb|mattress|nozzle|oil|pillow|razor blades|shingles|tires|windshield wipers",
-"Something you'd find in a car":"air freshener|booster seat|chargers|dashboard|emergency kit|floor mats|glove box|hand sanitizer|ice scraper|jumper cables|keys|loose change|maps|napkins|owner's manual|phone mount|registration|sunglasses|tissues|wipers",
-"Something you'd find under a bed":"art projects|boxes|cat|dust bunnies|extension cord|forgotten book|gift wrap|hair tie|insulation dust|junk|kid's toys|luggage|monsters|notebook|old shoes|photo album|remote|slippers|toys|wrapping paper",
-"Something you'd take camping":"axe|bug spray|compass|dutch oven|extra socks|flashlight|granola bars|hatchet|ice chest|jacket|knife|lantern|matches|neck gaiter|oil lamp|poncho|rope|sleeping bag|tent|water bottle",
-"Something you'd take on a plane":"AirPods|blanket|charger|deck of cards|earbuds|face mask|gum|headphones|iPad|jacket|Kindle|laptop|magazine|neck pillow|over-ear headphones|passport|reading glasses|snacks|tickets|water bottle",
-"Something you're afraid of":"acrophobia|bears|clowns|dentists|escalators|failure|ghosts|heights|insects|jellyfish|knives|lightning|mice|needles|open water|public speaking|rejection|spiders|thunder|wasps",
-"Song titles":"Africa|Believer|Creep|Dreams|Everlong|Fireworks|Georgia|Hallelujah|Imagine|Jolene|Karma|Levitating|Mamma Mia|November Rain|Otherside|Purple Rain|Respect|Sicko Mode|Thriller|Wonderwall",
-"Sports":"archery|baseball|cricket|diving|equestrian|football|golf|hockey|ice skating|judo|karate|lacrosse|marathon|netball|orienteering|polo|rugby|soccer|tennis|wrestling",
-"Sports equipment":"arrow|bat|cleats|discus|elbow pads|football|glove|helmet|ice skates|javelin|kayak paddle|lacrosse stick|mitt|net|oar|puck|racket|shin guards|tee|whistle",
-"Store names":"Aldi|Best Buy|Costco|Dollar Tree|Etsy|Foot Locker|GameStop|Home Depot|IKEA|JCPenney|Kroger|Lowe's|Macy's|Nordstrom|Old Navy|Petco|REI|Staples|Target|Walmart",
-"Streets and street names":"Ash Street|Broadway|Church Street|Delaware Avenue|Elm Street|First Avenue|Grand Street|High Street|Independence Way|Jackson Street|King Street|Lincoln Avenue|Main Street|North Road|Oak Street|Park Avenue|River Road|Second Street|Third Street|Washington Street",
-"TV shows":"Alias|Bones|Cheers|Dexter|ER|Friends|Glee|House|I Love Lucy|Jeopardy|Kojak|Lost|MASH|NCIS|Ozark|Psych|Rome|Seinfeld|Taxi|Wednesday",
-"Terms of endearment":"angel|babe|cutie|darling|everything|flower|gorgeous|honey|iubita|jewel|kitten|love|muffin|nugget|old friend|pumpkin|rosebud|sweetheart|treasure|wifey",
-"Things at a beach":"algae|bucket|cooler|driftwood|eel|flip-flops|gulls|hat|ice cream|jellyfish|kite|lifeguard|metal detector|net|ocean|pier|raft|sand|towel|waves",
-"Things at a campsite":"axe|bug spray|campfire|dutch oven|embers|firewood|grill|hammock|ice chest|jerky|kindling|lantern|marshmallows|net|outhouse|propane|rope|sleeping bag|tent|water jug",
-"Things at a circus":"acrobat|balloons|clown|daredevil|elephant|fire eater|games|high wire|illusionist|juggler|knife thrower|lion tamer|magician|net|organ music|popcorn|ringmaster|stilts|trapeze|whip",
-"Things at a construction site":"asphalt|bulldozer|cement mixer|dump truck|excavator|forklift|gravel|hard hats|I-beams|jackhammer|kneepads|ladders|mortar|nails|orange cones|plywood|rebar|scaffolding|trailer|wheelbarrow",
-"Things at a farmers market":"apples|bread|corn|dahlias|eggs|flowers|goat cheese|honey|Italian plums|jam|kale|lettuce|melons|nectarines|onions|peaches|radishes|squash|tomatoes|watermelon",
-"Things at a gas station":"air pump|beef jerky|coffee|diesel|energy drinks|fuel|garbage cans|hot dogs|ice|jumper cables|key chains|lottery tickets|maps|nozzle|oil|pumps|receipts|squeegee|tire gauge|windshield fluid",
-"Things at a hardware store":"anchors|bolts|caulk|drill bits|extension cords|fasteners|glue|hammers|insulation|joint compound|keys cut|lumber|mailboxes|nails|outlet covers|paint|rakes|screws|tape measures|wrenches",
-"Things at a library":"atlas|bookshelves|catalog|dictionary|encyclopedia|fiction section|globe|help desk|index|journals|kids' section|librarian|magazines|newspapers|overdue notices|periodicals|reading room|study rooms|tables|water fountain",
-"Things at a picnic":"ants|blanket|cooler|deviled eggs|eating utensils|fruit salad|grill|hot dogs|ice|juice|ketchup|lemonade|melons|napkins|olives|potato salad|rolls|sandwiches|tablecloth|watermelon",
-"Things at a supermarket":"apples|bread|cereal|detergent|eggs|flour|grapes|honey|ice cream|juice|ketchup|lettuce|milk|napkins|oranges|pasta|rice|sugar|tea|water",
-"Things at a wedding":"aisle|bouquet|cake|dress|escort cards|flowers|garter|honeymoon|invitations|jokes|kiss|limo|music|napkins|officiant|photographer|rings|speeches|toast|wine",
-"Things at a zoo":"aviary|bears|camels|dolphins|elephants|flamingos|giraffes|hippos|iguanas|jaguars|kangaroos|lions|monkeys|nocturnal house|otters|penguins|rhinos|snakes|tigers|wolves",
-"Things at an airport":"arrivals board|baggage claim|customs|departures|escalator|food court|gate|hangar|immigration desk|jet bridge|kiosk|luggage|metal detector|newsstand|overhead bins|passport control|runway|security|terminal|wheelchairs",
-"Things in a barn":"anvil|bales|cows|donkey|equipment|feed|goats|hay|iron tools|jugs|kittens|loft|manger|nails|oats|pitchfork|rope|stalls|troughs|water buckets",
-"Things in a bathroom":"aftershave|bathtub|comb|drain|electric razor|floss|glass|hairbrush|iodine|jar of cotton swabs|Kleenex|lotion|mirror|nail clippers|ointment|plunger|razor|shampoo|towel|washcloth",
-"Things in a city":"alleys|buses|cafes|downtown|elevators|fire hydrants|graffiti|hotels|intersections|jaywalkers|kiosks|lampposts|museums|newsstands|offices|parks|restaurants|subways|taxis|warehouses",
-"Things in a classroom":"alphabet chart|bookshelf|chalkboard|desks|eraser|flag|globe|homework|ink pens|journals|kids|lockers|maps|notebooks|overhead projector|pencils|ruler|students|teacher|whiteboard",
-"Things in a desk drawer":"adhesive tape|binder clips|calculator|dice|erasers|folders|glue stick|highlighter|index cards|junk mail|keys|labels|markers|notepad|old receipts|pens|rubber bands|stapler|thumbtacks|whiteout",
-"Things in a diner":"apple pie|booths|coffee|dessert case|eggs|fries|griddle|hash browns|ice water|jukebox|ketchup|laminated menus|milkshakes|napkin dispenser|onion rings|pancakes|register|syrup|toast|waitress",
-"Things in a first aid kit":"aspirin|bandages|cotton balls|disinfectant|elastic wrap|forceps|gauze|hydrogen peroxide|ibuprofen|jar of ointment|kit manual|latex gloves|moleskin|nail scissors|ointment|painkillers|razor blade|scissors|tweezers|wipes",
-"Things in a fridge":"apples|butter|cheese|deli meat|eggs|fruit|grapes|ham|ice|jam|ketchup|lettuce|milk|noodles|olives|pickles|relish|salsa|takeout|water",
-"Things in a garage":"air compressor|bicycle|car|drill|extension cord|funnel|gas can|hammer|ice scraper|jack|kayak|ladder|mower|nails|oil|paint cans|rake|shovel|toolbox|wrench",
-"Things in a garden":"arbor|bees|compost|dirt|earthworms|flowers|gnome|hose|insects|jasmine|kale|lavender|mulch|nozzle|onions|pots|roses|soil|tomatoes|weeds",
-"Things in a gym":"aerobics room|barbell|chalk|dumbbells|elliptical|foam roller|gloves|hand weights|incline bench|jump rope|kettlebell|lockers|mats|nautilus machine|olympic bar|pull-up bar|rowing machine|showers|treadmill|water fountain",
-"Things in a hospital":"anesthesia|bandages|crutches|doctor|elevator|forceps|gurney|heart monitor|IV drip|janitor|Kleenex|lab|monitor|nurse|operating room|patients|radiology|scrubs|thermometer|wheelchair",
-"Things in a hospital room":"armband|bed|call button|drip stand|electrodes|flowers|gown|handrail|IV pole|jug of water|kleenex|linens|monitor|nurse call|oxygen|pillows|remote|sink|tray table|wheelchair",
-"Things in a hotel room":"alarm clock|bathrobe|coffee maker|desk|extra pillows|fridge|guest book|hangers|ice bucket|jacuzzi tub|key card|luggage rack|mini bar|nightstand|outlets|phone|remote|safe|towels|window",
-"Things in a kitchen":"apron|blender|colander|dishwasher|egg timer|fridge|grater|hot plate|ice maker|juicer|kettle|ladle|microwave|napkins|oven|pot|rolling pin|spatula|toaster|whisk",
-"Things in a lunchbox":"apple|banana|cookies|drink box|egg salad|fruit cup|granola bar|ham sandwich|ice pack|juice box|kiwi|leftovers|milk|napkin|orange|pretzels|raisins|sandwich|thermos|water bottle",
-"Things in a museum":"artifacts|benches|curator|dinosaur bones|exhibits|frames|gift shop|hallways|installations|jewelry|kiosks|lighting|mummies|nameplates|oil paintings|pottery|ropes|sculptures|tours|wall text",
-"Things in a park":"acorns|bench|carousel|dogs|elm tree|fountain|grass|hedge|ice cream cart|jungle gym|kids|lamppost|monkey bars|nest|oak tree|picnic table|runners|swings|trash can|water fountain",
-"Things in a purse":"aspirin|brush|coins|deodorant|earbuds|floss|gum|hand sanitizer|ID|jewelry|keys|lipstick|mints|nail file|old receipts|phone|receipts|sunglasses|tissues|wallet",
-"Things in a toolbox":"Allen wrench|bits|clamp|drill|extension cord|file|glue|hammer|insulated gloves|jigsaw blade|knife|level|mallet|nails|oil|pliers|ruler|screws|tape measure|wrench",
-"Things in a wallet":"AAA card|business cards|cash|debit card|expired coupon|five-dollar bill|gift card|health insurance card|ID|job badge|keycard|license|membership card|note|old receipt|photos|receipts|stamps|ticket stub|work badge",
-"Things in an office":"adhesive tape|binders|computer|desk|envelopes|file cabinet|glue|highlighters|inbox|janitor's cart|keyboard|lamp|monitor|notepad|office chair|printer|rolodex|scanner|tape|whiteboard",
-"Things in the sky":"airplane|birds|clouds|drone|eagle|fog|geese|helicopter|ISS|jet|kite|lightning|moon|north star|ozone|planets|rainbow|sun|thunderheads|wind",
-"Things made of metal":"anchor|bolt|can|door hinge|engine|fork|gate|hammer|iron|jack|key|ladder|magnet|nail|oven rack|pipe|razor|spoon|toaster|wrench",
-"Things that are cold":"air conditioning|blizzard|cellar|dry ice|Everest|freezer|glacier|hail|ice|January|Klondike bar|lemonade|milkshake|North Pole|ocean water|popsicle|refrigerator|snow|tundra|winter",
-"Things that are free":"advice|breathing|compliments|daylight|exercise|fresh air|good weather|hugs|ideas|jokes|kindness|laughter|memories|naps|opinions|public parks|rain|sunshine|thoughts|water fountains",
-"Things that are loud":"alarm|band|chainsaw|drums|explosion|fireworks|gunshot|horn|idling truck|jackhammer|kids|leaf blower|motorcycle|nightclub|orchestra|parade|rooster|siren|thunder|whistle",
-"Things that are man-made":"airplane|bridge|computer|dam|engine|fence|glass|house|ink|jar|kite|ladder|machine|nail|oven|paper|road|ship|tunnel|wheel",
-"Things that are noisy":"alarm|blender|chainsaw|drill|engine|fireworks|generator|horn|ice maker|jackhammer|kettle|lawnmower|motorcycle|neighbors|orchestra|parade|radio|siren|traffic|whistle",
-"Things that are round":"apple|ball|coin|doughnut|Earth|Frisbee|globe|hula hoop|igloo|jar lid|kickball|lollipop|moon|nickel|orange|pizza|ring|sun|tire|wheel",
-"Things that are sharp":"axe|blade|cheese grater|dagger|edge of paper|fork|glass shard|hatchet|ice pick|jagged rock|knife|lancet|machete|nails|opener blade|pin|razor|scissors|tacks|wire cutters",
-"Things that are soft":"angora|blanket|cotton|down|earlobes|feathers|grass|hair|insulation|jelly|kitten fur|lambswool|moss|napkins|old sweater|pillows|rugs|silk|teddy bear|wool",
-"Things that are sticky":"adhesive|bubble gum|caramel|duct tape|epoxy|flypaper|glue|honey|icing|jam|ketchup|lollipop|molasses|nectar|oatmeal|peanut butter|resin|syrup|tape|wax",
-"Things that come in a box":"aspirin|board game|cereal|donuts|eggs|fireworks|greeting cards|hardware|index cards|jewelry|kitchen tiles|light bulbs|matches|nails|oatmeal|pizza|raisins|shoes|tissues|wine",
-"Things that come in pairs":"aces|bookends|chopsticks|dice|earrings|feet|gloves|headphones|ice skates|jeans legs|knee pads|lungs|mittens|nostrils|oars|pants legs|rollerblades|socks|twins|wings",
-"Things that fly":"airplane|bat|crow|dragonfly|eagle|falcon|glider|helicopter|insects|jet|kite|locust|moth|nighthawk|owl|pigeon|rocket|sparrow|toucan|wasp",
-"Things that grow":"algae|bamboo|corn|daisies|evergreen|ferns|grass|hair|ivy|juniper|kudzu|lettuce|moss|nails|oak|plants|roots|seedlings|tomatoes|weeds",
-"Things that melt":"aluminum|butter|chocolate|dry ice|Easter candy|frost|glaciers|hail|ice cream|jello|Kit Kat|lard|marshmallows|nail polish|Oreo filling|popsicles|resin|snow|tallow|wax",
-"Things that smell good":"apple pie|bread|cinnamon|dryer sheets|eucalyptus|fresh coffee|gardenia|honeysuckle|incense|jasmine|kettle corn|lavender|mint|new car|oranges|pine|roses|soap|toast|wood smoke",
-"Things with a screen":"ATM|billboard|computer|dashboard|e-reader|fitness tracker|GPS|handheld game|iPad|jukebox|kiosk|laptop|monitor|navigation system|oscilloscope|phone|register|smartwatch|tablet|watch",
-"Things you buy for a new home":"appliances|blinds|couch|dishes|extension cords|furniture|garbage cans|hangers|ironing board|junk drawer organizer|kettle|lamps|mattress|nightstand|ottoman|paint|rugs|sheets|towels|washer",
-"Things you can climb":"a-frame ladder|boulder|cliff|dune|escarpment|fence|gate|hill|incline|jungle gym|kopje|ladder|mountain|net|obstacle wall|pole|rope|stairs|tree|wall",
-"Things you can hold in one hand":"apple|ball|coin|dice|egg|fork|glass|hammer|ice cube|jar|key|lighter|mug|notepad|orange|pen|remote|spoon|toothbrush|wallet",
-"Things you can pour":"apple juice|batter|coffee|dressing|egg whites|flour|gravy|honey|iced tea|juice|ketchup|lemonade|milk|nectar|oil|paint|rice|syrup|tea|water",
-"Things you can throw":"apple|ball|confetti|dart|egg|Frisbee|glove|horseshoe|ice|javelin|keys|log|marbles|newspaper|orange|pillow|rock|snowball|towel|water balloon",
-"Things you can wash":"apron|blanket|car|dishes|elbows|floor|glasses|hands|ice trays|jeans|kids|laundry|mugs|napkins|oven mitts|pans|rugs|socks|towels|windows",
-"Things you do at a party":"arrive late|bring a dish|chat|dance|eat|find friends|give a toast|host|introduce yourself|joke|karaoke|laugh|mingle|nibble|open gifts|play games|refill drinks|sing|toast|watch the clock",
-"Things you do at school":"answer questions|borrow books|change classes|do homework|eat lunch|find your locker|get graded|hang out|introduce yourself|join clubs|keep notes|listen|make friends|note-taking|open your locker|present|read|study|take tests|write",
-"Things you do at the beach":"apply sunscreen|build sandcastles|collect shells|dig|eat ice cream|float|get a tan|hunt for crabs|ice cream run|jog|kayak|lounge|make sandcastles|nap|observe the sunset|paddle|read|swim|tan|wade",
-"Things you do with your hands":"applaud|build|clap|dig|eat|fold|grab|hold|itch|juggle|knit|lift|mold|nudge|open|point|reach|shake|type|wave",
-"Things you find in a forest":"acorns|bark|creek|deer|elk|ferns|glade|hollow log|insects|junipers|kindling|leaves|moss|nests|owls|pine cones|roots|squirrels|trees|wildflowers",
-"Things you find in a pocket":"AirPods|buttons|coins|dryer lint|earbuds|fuzz|gum wrapper|hair tie|ID card|jackknife|keys|lint|mints|note|old ticket|phone|receipts|stones|tissues|wallet",
-"Things you find in a school":"auditorium|buses|cafeteria|desks|erasers|flag|gym|hallway|intercom|janitor|kids|lockers|maps|nurse's office|office|principal|recess|students|teachers|whiteboard",
-"Things you find on a map":"altitude|border|compass rose|desert|equator|forest|grid lines|highway|island|junction|key|latitude|mountains|north arrow|ocean|park|river|scale|town|water",
-"Things you plug in":"air fryer|blender|coffee maker|dryer|electric razor|fan|griddle|hair dryer|iron|juicer|kettle|lamp|microwave|nightlight|oven|printer|radio|speaker|toaster|washer",
-"Things you save up for":"airline tickets|boat|college|down payment|engagement ring|furniture|guitar|house|IVF|jewelry|kitchen remodel|laptop|motorcycle|new phone|orthodontics|piano|retirement|surgery|trip|wedding",
-"Things you shout":"Awesome|Bravo|Congratulations|Duck|Excuse me|Fore|Go|Help|Incoming|Jump|Keep going|Look out|Move|No|Oh no|Please|Run|Stop|Timber|Watch out",
-"Things you wear":"apron|belt|coat|dress|earrings|fedora|gloves|hat|ice skates|jacket|kimono|leggings|mittens|necklace|overalls|pants|raincoat|scarf|tie|watch",
-"Tools":"awl|bolt cutter|chisel|drill|edger|file|grinder|hammer|impact driver|jigsaw|knife|level|mallet|nail gun|oil can|pliers|ratchet|screwdriver|tape measure|wrench",
-"Trees and plants":"aspen|birch|cedar|dogwood|elm|fern|ginkgo|hickory|ivy|juniper|kale|lilac|maple|nettle|oak|pine|redwood|spruce|tulip|willow",
-"Types of bread":"artisan loaf|baguette|challah|dinner roll|English muffin|focaccia|garlic bread|hoagie roll|Italian bread|johnnycake|kaiser roll|loaf|matzo|naan|oat bread|pita|rye|sourdough|tortilla|wheat",
-"Types of candy":"Airheads|Butterfinger|Circus Peanuts|Dots|Everlasting Gobstopper|Fun Dip|gumdrops|Hershey bar|Idaho Spud|Jolly Rancher|Kit Kat|licorice|M&Ms|Nerds|Oh Henry|Pez|Rolo|Skittles|Twizzlers|Whoppers",
-"Types of dance":"Argentine tango|ballet|cha-cha|disco|electric slide|foxtrot|gavotte|hip-hop|Irish step|jive|Kathak|line dance|mambo|novelty dance|one-step|polka|rumba|salsa|tango|waltz",
-"Types of drink":"apple juice|beer|cider|Dr Pepper|eggnog|Fanta|ginger ale|hot chocolate|iced tea|juice|Kool-Aid|lemonade|milk|nectar|orange juice|punch|root beer|soda|tea|water",
-"Types of fabric":"acrylic|burlap|cotton|denim|eyelet|flannel|gingham|hemp|Irish linen|jersey|khaki|linen|muslin|nylon|organza|polyester|rayon|silk|tweed|wool",
-"Types of parties":"anniversary party|birthday party|costume party|dinner party|engagement party|farewell party|graduation party|Halloween party|ice cream social|jack-and-jill party|karaoke party|luau|masquerade|New Year's party|office party|pool party|retirement party|surprise party|tailgate|wedding reception",
-"Types of sandwiches":"avocado melt|BLT|club|Dagwood|egg salad|French dip|grilled cheese|ham and cheese|Italian sub|jam sandwich|kebab wrap|lobster roll|meatball|Nutella sandwich|open-faced|patty melt|Reuben|sloppy joe|tuna melt|wrap",
-"Types of shoes":"ankle boots|boots|clogs|derby shoes|espadrilles|flats|galoshes|heels|Italian leather shoes|jellies|kitten heels|loafers|moccasins|newborn booties|Oxfords|pumps|running shoes|sandals|trainers|wedges",
-"Types of soup":"albondigas|borscht|chicken noodle|dumpling soup|egg drop|French onion|gazpacho|hot and sour|Italian wedding|Jerusalem artichoke soup|kale soup|lentil|minestrone|noodle soup|onion|pho|ramen|split pea|tomato|wonton",
-"Types of stores at a mall":"Aeropostale|bookstore|candle store|department store|electronics store|food court|GameStop|Hot Topic|ice cream shop|jewelry store|kiosk|luggage store|music store|nail salon|optical shop|pet store|record store|shoe store|toy store|watch repair",
-"Types of weather":"arid|blizzard|cloudy|drizzle|El Nino|foggy|gusty|hail|icy|January thaw|katabatic wind|lightning|monsoon|nor'easter|overcast|partly cloudy|rain|snow|thunderstorm|windy",
-"U.S. cities":"Atlanta|Boston|Chicago|Denver|El Paso|Fresno|Green Bay|Houston|Indianapolis|Jacksonville|Kansas City|Las Vegas|Miami|Nashville|Omaha|Phoenix|Reno|Seattle|Tampa|Wichita",
-"Vegetables":"artichoke|broccoli|carrot|daikon|eggplant|fennel|garlic|horseradish|iceberg lettuce|jicama|kale|leek|mushroom|napa cabbage|okra|pea|radish|spinach|turnip|watercress",
-"Video games":"Among Us|Bioshock|Civilization|Doom|Elden Ring|Fortnite|Galaga|Halo|Ico|Journey|Kirby|Left 4 Dead|Minecraft|NBA 2K|Overwatch|Pac-Man|Roblox|Skyrim|Tetris|Wii Sports",
-"Ways to get around":"airplane|bus|car|dogsled|escalator|ferry|golf cart|helicopter|inline skates|jet|kayak|light rail|motorcycle|narrow boat|on foot|plane|rickshaw|scooter|train|walking",
-"Weather words":"arid|breezy|cloudy|drizzle|El Niño|frost|gusty|humid|icy|jet stream|katabatic|lightning|muggy|nor'easter|overcast|precipitation|rainy|sleet|thunder|windy",
-"Words in a fairy tale":"adventure|beast|castle|dragon|enchanted|forest|giant|happily ever after|innkeeper|jester|king|long ago|magic|nobleman|ogre|princess|riddle|spell|troll|witch",
-"Words in a love song":"always|baby|crazy|darling|eyes|forever|girl|heart|I love you|joy|kiss|love|moonlight|never|only you|promise|romance|sweet|tonight|wonderful",
-"Words in a newspaper headline":"arrested|breaking|crisis|deal|election|fire|governor|hearing|investigation|jury|killed|lawsuit|mayor|new|opens|protest|report|storm|trial|wins",
-"Words on a menu":"appetizer|beverages|combo|dessert|entree|fries|grilled|house salad|iced|jumbo|kids meal|local|marinated|nightly special|organic|platter|roasted|side|toasted|wrap",
-"Words shouted at a game":"Airball|Boo|Charge|Defense|Easy out|Foul|Go|Hustle|Ice him|Jump|Kick it|Let's go|Move|Nice shot|Offside|Push|Run|Shoot|Travel|We want a hit",
-"Words that describe a house":"airy|brick|cozy|drafty|elegant|furnished|grand|historic|immaculate|jumbled|kept-up|large|modern|new|old|palatial|rustic|spacious|tidy|warm",
-"Words that describe a person":"ambitious|brave|calm|dependable|energetic|funny|generous|honest|impatient|jolly|kind|loyal|modest|nervous|optimistic|patient|reliable|stubborn|thoughtful|witty",
-"Words that describe food":"airy|buttery|creamy|delicious|earthy|flaky|greasy|hearty|icy|juicy|kosher|light|moist|nutty|oily|peppery|rich|salty|tangy|warm",
-"Words that describe music":"airy|bouncy|catchy|dreamy|energetic|funky|groovy|haunting|intense|jazzy|kinetic|lively|mellow|nostalgic|orchestral|punchy|rhythmic|soulful|twangy|wistful",
-"Words that end in -ing":"acting|baking|cooking|dancing|eating|fishing|giving|hiking|ironing|jogging|knitting|laughing|mixing|napping|opening|painting|running|singing|talking|writing",
-"Words that rhyme with each other":"ate and late|bear and pear|cat and hat|dog and log|eight and gate|fine and line|goat and boat|hand and land|ice and mice|jam and ham|kite and bite|light and night|moon and spoon|night and light|old and cold|pop and hop|rain and train|sun and fun|tree and free|wall and ball",
-"Words used at work":"agenda|budget|client|deadline|email|feedback|goals|hire|invoice|jargon|KPI|launch|meeting|networking|onboarding|payroll|report|schedule|training|workflow",
-"Words used in cooking":"al dente|braise|chop|dice|emulsify|fold|grate|hard boil|infuse|julienne|knead|ladle|marinate|nestle|overproof|poach|roast|simmer|toss|whisk",
-"Words used in sports":"assist|bunt|coach|defense|end zone|foul|goal|halftime|inning|jump ball|kickoff|lineup|match|net|offside|penalty|referee|score|touchdown|whistle",
-"Words with double letters":"apple|bubble|coffee|dizzy|effort|funny|giggle|hobby|inn|jelly|kitten|little|matter|noodle|office|puppy|rabbit|summer|tunnel|willow",
-"Words you'd hear on the news":"arrest|breaking|coverage|developing|election|forecast|governor|headline|investigation|jury|killed|live|mayor|national|official|protest|report|storm|testimony|weather"
-};
-/* ANSWERS-END */
-function lookup(cat, letter){
-  const row = ANSWERS[cat];
-  if(!row) return null;
-  const v = row.split("|")[LETTER_ORDER.indexOf(letter)];
-  return v || null;
+/* ---------- local identity (resets on refresh, by design) ---------- */
+const me = "p" + Math.random().toString(36).slice(2, 9);
+let myName = "";
+let code = null, room = null, db = null, roomRef = null, unsub = null;
+let clockTimer = null, lastPhase = null, tallied = false;
+let autoTimer = null, lastAuto = null, cdTimer = null, endTimer = null;
+let introTimer = null, introTimer2 = null;
+
+/* ---------- setup ---------- */
+if(!FIREBASE_CONFIG.databaseURL){
+  show("v-config");
+} else {
+  db = getDatabase(initializeApp(FIREBASE_CONFIG));
+  $("footLeft").textContent = "Connected";
+  show("v-home");
 }
 
-/* ---------------- state ---------------- */
-const $ = id => document.getElementById(id);
-let total = 120, left = 120, ticking = false, timer = null, round = 0, catCount = 12;
-let currentCats = [];
-
-/* ---------------- categories render ---------------- */
+function show(id){
+  ["v-config","v-home","v-lobby","v-play","v-vote","v-scores"]
+    .forEach(v => $(v).classList.toggle("hide", v !== id));
+}
+function norm(s){
+  return (s || "").toLowerCase().trim()
+    .replace(/^(a|an|the)\s+/, "")
+    .replace(/[^a-z0-9]/g, "");
+}
 function shuffle(a){
-  const out = a.slice();
-  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
-  return out;
+  const o = a.slice();
+  for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}
+  return o;
 }
-function drawCategories(){
-  const n = catCount;
-  const picked = shuffle(CATEGORIES).slice(0,n);
-  currentCats = picked;
-  $("exStatus").textContent = "";
-  $("cats").innerHTML = picked.map((c,i)=>`<li style="--i:${i}"><span>${c}</span></li>`).join("");
-  conceal();
-}
-function conceal(){
-  $("cats").classList.remove("revealed");
-  $("catsWrap").classList.remove("open");
-}
-function reveal(){
-  $("cats").classList.add("revealed");
-  $("catsWrap").classList.add("open");
-}
-$("cats").addEventListener("click", e=>{
-  const li = e.target.closest("li");
-  if(li) li.classList.toggle("struck");
+const isHost = () => room && room.hostId === me;
+const playerIds = () => Object.keys((room && room.players) || {});
+
+/* ---------- create / join ---------- */
+$("createBtn").addEventListener("click", async ()=>{
+  myName = ($("nameA").value || "").trim();
+  if(!myName) return $("nameA").focus();
+  let c;
+  for(let tries=0;;tries++){
+    c = String(Math.floor(1000 + Math.random()*9000));
+    const snap = await get(ref(db, "rooms/" + c));
+    if(!snap.exists()) break;
+    if(tries > 25) return alert("Could not find a free room code, try again.");
+  }
+  await set(ref(db, "rooms/" + c), {
+    hostId: me, phase: "lobby", round: 0,
+    seconds: 120, rounds: 3, catCount: 10,
+    createdAt: serverTimestamp(),
+    players: { [me]: { name: myName, score: 0 } }
+  });
+  attach(c);
 });
 
-/* ---------------- letter ---------------- */
-let lastLetter = null;
-let measureCtx = null;
+$("joinBtn").addEventListener("click", async ()=>{
+  myName = ($("nameB").value || "").trim();
+  const c = ($("codeIn").value || "").trim();
+  $("joinErr").textContent = "";
+  if(!myName) return $("nameB").focus();
+  if(!/^\d{4}$/.test(c)) { $("joinErr").textContent = "Enter the four digit code."; return; }
+  const snap = await get(ref(db, "rooms/" + c));
+  if(!snap.exists()){ $("joinErr").textContent = "No room with that code."; return; }
+  if(snap.val().phase !== "lobby"){ $("joinErr").textContent = "That game already started."; return; }
+  await update(ref(db, `rooms/${c}/players/${me}`), { name: myName, score: 0 });
+  attach(c);
+});
 
-/* Centers the glyph by its actual ink box, not its line box, so caps
-   with no descender don't sit high in the panel. */
-function centerLetter(){
-  const el = $("letter"), span = el.querySelector("span");
-  const cs = getComputedStyle(el);
-  const size = parseFloat(cs.fontSize);
-  const lineBox = parseFloat(cs.lineHeight) || size;
-  if(!measureCtx) measureCtx = document.createElement("canvas").getContext("2d");
-  measureCtx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
-  const m = measureCtx.measureText(span.textContent || "A");
-  if(!m.fontBoundingBoxAscent){ span.style.transform = ""; return; }
-  const halfLeading = (lineBox - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2;
-  const baseline = halfLeading + m.fontBoundingBoxAscent;
-  const inkCenter = baseline - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
-  span.style.transform = `translateY(${(lineBox / 2 - inkCenter).toFixed(2)}px)`;
-}
-
-function drawLetter(){
-  let L;
-  do { L = LETTERS[Math.floor(Math.random()*LETTERS.length)]; }
-  while (L === lastLetter && LETTERS.length > 1);
-  lastLetter = L;
-  const el = $("letter");
-  el.querySelector("span").textContent = L;
-  el.classList.remove("roll"); void el.offsetWidth; el.classList.add("roll");
-  centerLetter();
-}
-
-/* ---------------- timer ---------------- */
-function fmt(s){
-  const m = Math.floor(s/60), r = s%60;
-  return m + ":" + String(r).padStart(2,"0");
-}
-function paint(){
-  $("clock").textContent = fmt(left);
-  $("fill").style.width = (total ? (left/total)*100 : 0) + "%";
-  $("clock").classList.toggle("done", left === 0);
-}
-function setTotal(sec){
-  total = Math.max(1, sec);
-  left = total;
-  stop();
-  $("state").textContent = "Ready";
-  paint();
-}
-function tick(){
-  left--;
-  if(left <= 0){ left = 0; paint(); stop(); $("state").textContent = "Time"; chime(); showExamples(); return; }
-  paint();
-}
-function start(){
-  if(ticking || left === 0) return;
-  unlockAudio();
-  ticking = true;
-  reveal();
-  $("startBtn").textContent = "Pause";
-  $("state").textContent = "Running";
-  timer = setInterval(tick, 1000);
-}
-function stop(){
-  ticking = false;
-  clearInterval(timer);
-  $("startBtn").textContent = "Start";
-}
-function toggle(){
-  if(ticking){ stop(); $("state").textContent = "Paused"; }
-  else start();
-}
-function reset(){
-  left = total; stop(); conceal(); clearAnswers(); $("state").textContent = "Ready"; paint();
-}
-
-/* ---------------- example answers ---------------- */
-function clearAnswers(){
-  $("cats").querySelectorAll(".answer").forEach(a=>a.remove());
-  $("exStatus").textContent = "";
-}
-function paintAnswers(list){
-  const rows = [...$("cats").children];
-  rows.forEach((li,i)=>{
-    if(li.querySelector(".answer")) return;
-    const el = document.createElement("span");
-    el.className = "answer";
-    el.style.setProperty("--i", i);
-    el.textContent = list[i] || "—";
-    li.appendChild(el);
-    requestAnimationFrame(()=>el.classList.add("in"));
+function attach(c){
+  code = c;
+  roomRef = ref(db, "rooms/" + c);
+  onDisconnect(ref(db, `rooms/${c}/players/${me}`)).remove();
+  $("footLeft").textContent = "Room " + c;
+  if(unsub) unsub();
+  unsub = onValue(roomRef, snap=>{
+    room = snap.val();
+    if(!room){ alert("The room was closed."); location.reload(); return; }
+    render();
   });
 }
-function showExamples(){
-  const letter = lastLetter, cats = currentCats.slice();
-  if(!cats.length) return;
-  paintAnswers(cats.map(c=>lookup(c, letter) || "—"));
-  $("exStatus").textContent = "Sample answers";
-}
 
-/* end-of-round buzzer */
-let audio = null;
-function unlockAudio(){
-  try{
-    if(!audio) audio = new (window.AudioContext||window.webkitAudioContext)();
-    if(audio.state === "suspended") audio.resume();
-  }catch(e){}
-}
-function chime(){
-  unlockAudio();
-  if(!audio) return;
-  const now = audio.currentTime;
-  /* three short low blasts, two detuned oscillators each for a harder edge */
-  [0, 0.45, 0.90].forEach(offset=>{
-    const t = now + offset, end = t + 0.34;
-    const gain = audio.createGain();
-    gain.connect(audio.destination);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.32, t + 0.015);
-    gain.gain.setValueAtTime(0.32, end - 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, end);
-    [196, 262].forEach(freq=>{
-      const osc = audio.createOscillator();
-      osc.type = "square";
-      osc.frequency.value = freq;
-      osc.connect(gain);
-      osc.start(t);
-      osc.stop(end);
+/* ---------- host: settings + start ---------- */
+["setSeconds","setRounds","setCats"].forEach(id=>{
+  $(id).addEventListener("change", ()=>{
+    if(!isHost()) return;
+    update(roomRef, {
+      seconds: clamp(+$("setSeconds").value, 15, 600),
+      rounds:  clamp(+$("setRounds").value, 1, 10),
+      catCount:clamp(+$("setCats").value, 4, 16)
     });
   });
+});
+const clamp = (v,a,b) => Math.max(a, Math.min(b, isNaN(v) ? a : v));
+
+$("startBtn").addEventListener("click", ()=>{ if(isHost()) startRound(1); });
+$("nextBtn").addEventListener("click", ()=>{ if(isHost()) startRound(room.round + 1); });
+$("againBtn").addEventListener("click", async ()=>{
+  if(!isHost()) return;
+  const reset = {};
+  playerIds().forEach(p => reset[`players/${p}/score`] = 0);
+  await update(roomRef, Object.assign(reset, {
+    phase:"lobby", round:0, answers:null, submitted:null, votes:null,
+    letter:null, categories:null, startedAt:null
+  }));
+});
+
+function startRound(n){
+  const letter = LETTERS[Math.floor(Math.random()*LETTERS.length)];
+  const cats = shuffle(CATEGORIES).slice(0, room.catCount);
+  update(roomRef, {
+    phase: "countdown", round: n, letter, categories: cats,
+    countdownAt: serverTimestamp(), startedAt: null, voteIndex: 0,
+    roundTotal: room.seconds, roundLeft: room.seconds, paused: false, pausedBy: null
+  });
 }
 
-/* ---------------- wiring ---------------- */
-document.querySelectorAll(".presets button").forEach(b=>{
-  b.addEventListener("click", ()=>{
-    document.querySelectorAll(".presets button").forEach(x=>x.setAttribute("aria-pressed","false"));
-    b.setAttribute("aria-pressed","true");
-    const s = parseInt(b.dataset.sec,10);
-    $("mins").value = Math.floor(s/60);
-    $("secs").value = s%60;
-    setTotal(s);
+const CD_SECONDS = 3;
+function tickCountdown(){
+  if(!room || room.phase !== "countdown" || !room.countdownAt) return;
+  const left = CD_SECONDS - (Date.now() - room.countdownAt) / 1000;
+  $("cdRound").textContent = `Round ${room.round} of ${room.rounds}`;
+  $("cdNum").textContent = Math.max(1, Math.ceil(left));
+  if(left <= 0){
+    $("cd").classList.add("out");           /* fade away rather than cut */
+    if(isHost() && left < -0.5){
+      update(roomRef, { phase: "playing", startedAt: serverTimestamp() });
+    }
+  } else {
+    $("cd").classList.remove("out");
+  }
+}
+
+/* ---------- playing ---------- */
+$("doneBtn").addEventListener("click", submitMine);
+
+function submitMine(){
+  if(!room || room.phase !== "playing") return;
+  const vals = {};
+  [...document.querySelectorAll("#answerList input")].forEach((inp,i)=>{
+    const v = inp.value.trim();
+    if(v) vals[i] = v;
+  });
+  update(roomRef, {
+    [`answers/${room.round}/${me}`]: vals,
+    [`submitted/${room.round}/${me}`]: true
+  });
+  $("doneBtn").disabled = true;
+  $("submitNote").textContent = "Submitted. Waiting for everyone else.";
+}
+
+function buildAnswerInputs(){
+  $("answerList").innerHTML = room.categories.map(c=>
+    `<li><span class="cat">${escapeHtml(c)}</span><input type="text" maxlength="40" autocomplete="off"></li>`
+  ).join("");
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+
+function secondsLeft(){
+  if(!room) return 0;
+  const segment = room.roundLeft != null ? room.roundLeft : room.seconds;
+  if(room.paused || !room.startedAt) return segment;
+  return Math.max(0, segment - Math.floor((Date.now() - room.startedAt) / 1000));
+}
+
+function tickClock(){
+  if(!room || room.phase !== "playing") return;
+  const total = room.roundTotal || room.seconds;
+  const left = secondsLeft();
+  $("playClock").textContent = Math.floor(left/60) + ":" + String(left%60).padStart(2,"0");
+  $("playFill").style.width = (left/total*100) + "%";
+  if(room.paused) return;
+  if(left === 0){
+    if(!$("doneBtn").disabled) submitMine();
+    /* brief grace so the final writes land before anyone sees the answers */
+    if(isHost() && !endTimer){
+      endTimer = setTimeout(()=>{
+        endTimer = null;
+        if(room && room.phase === "playing") toVoting();
+      }, 900);
+    }
+  }
+}
+
+/* Only the host can pause or resume, so the round can't be stopped mid-thought
+   by anyone else. The remaining time is banked so the clock resumes exactly. */
+$("pauseBtn").addEventListener("click", ()=>{
+  if(!room || !isHost() || room.phase !== "playing" || room.paused) return;
+  clearTimeout(endTimer); endTimer = null;
+  update(roomRef, {
+    paused: true,
+    roundLeft: secondsLeft(),
+    pausedBy: (room.players[me] && room.players[me].name) || "the host"
   });
 });
-function fromInputs(){
-  const m = Math.min(59, Math.max(0, parseInt($("mins").value||0,10)));
-  const s = Math.min(59, Math.max(0, parseInt($("secs").value||0,10)));
-  document.querySelectorAll(".presets button").forEach(x=>{
-    x.setAttribute("aria-pressed", String(parseInt(x.dataset.sec,10) === m*60+s));
+$("resumeBtn").addEventListener("click", ()=>{
+  if(!room || !isHost() || !room.paused) return;
+  update(roomRef, { paused: false, startedAt: serverTimestamp() });
+});
+
+function allSubmitted(){
+  const sub = (room.submitted && room.submitted[room.round]) || {};
+  return playerIds().every(p => sub[p]);
+}
+
+/* ---------- voting ---------- */
+/* Duplicates are worked out from whatever answers are currently in hand, every
+   time we render or score. Computing them once at the end of the round raced
+   with the last submissions still being written, so late answers escaped it. */
+function dupesFor(ci){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const seen = {};
+  playerIds().forEach(p=>{
+    const key = norm((answers[p] && answers[p][ci]) || "");
+    if(!key) return;
+    (seen[key] = seen[key] || []).push(p);
   });
-  setTotal(m*60+s);
+  const flagged = [];
+  Object.keys(seen).forEach(k => { if(seen[k].length > 1) flagged.push(...seen[k]); });
+  return flagged;
 }
-$("mins").addEventListener("change", fromInputs);
-$("secs").addEventListener("change", fromInputs);
 
-$("startBtn").addEventListener("click", toggle);
-$("resetBtn").addEventListener("click", reset);
-/* custom dropdown for category count */
-const dd = $("countDD");
-function closeDD(){ dd.classList.remove("open"); $("countBtn").setAttribute("aria-expanded","false"); }
-$("countBtn").addEventListener("click", e=>{
-  e.stopPropagation();
-  const open = dd.classList.toggle("open");
-  $("countBtn").setAttribute("aria-expanded", String(open));
-});
-$("countMenu").addEventListener("click", e=>{
-  const li = e.target.closest("li");
-  if(!li) return;
-  catCount = parseInt(li.dataset.value,10);
-  $("countMenu").querySelectorAll("li").forEach(o=>o.setAttribute("aria-selected", String(o === li)));
-  $("countLabel").textContent = li.textContent;
-  closeDD();
-  const wasOpen = $("cats").classList.contains("revealed");
-  drawCategories();
-  if(wasOpen) requestAnimationFrame(reveal);
-});
-document.addEventListener("click", closeDD);
-document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeDD(); });
-
-function newRound(){
-  round++;
-  $("rollCount").textContent = "Round " + String(round).padStart(2,"0");
-  drawLetter();
-  drawCategories();
-  reset();
+function toVoting(){
+  if(room.phase !== "playing") return;
+  update(roomRef, { phase:"voting", voteIndex:0 });
 }
-$("newRound").addEventListener("click", newRound);
-$("rerollBtn").addEventListener("click", drawLetter);
 
-document.addEventListener("keydown", e=>{
-  if(["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName)) return;
-  const k = e.key.toLowerCase();
-  if(k === " " || e.code === "Space"){ e.preventDefault(); toggle(); }
-  else if(k === "r"){ reset(); }
-  else if(k === "n"){ newRound(); }
-  else if(k === "l"){ drawLetter(); }
-});
+function validStart(raw){
+  return norm(raw).charAt(0) === room.letter.toLowerCase();
+}
 
-/* first round */
-newRound();
-window.addEventListener("resize", centerLetter);
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(centerLetter);
+function renderVoting(){
+  const ci = Math.min(room.voteIndex || 0, room.categories.length - 1);
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const dupes = dupesFor(ci);
+  const votes = ((room.votes && room.votes[room.round]) || {})[ci] || {};
+  const players = room.players || {};
+  const total = room.categories.length;
+
+  $("voteRound").textContent = `Round ${room.round} of ${room.rounds}`;
+  $("voteCount").textContent = `Category ${ci + 1} of ${total}`;
+  $("voteFill").style.width = ((ci + 1) / total * 100) + "%";
+  $("voteCat").textContent = room.categories[ci];
+  $("voteSub").textContent = "Letter " + room.letter;
+
+  let pending = 0;
+  const settled = allVotesIn(ci);
+
+  $("voteRows").innerHTML = playerIds().map(p=>{
+    const raw = (answers[p] && answers[p][ci]) || "";
+    const blank = !raw.trim();
+    const isDup = dupes.includes(p);
+    const wrong = !blank && !validStart(raw);
+    const dead = blank || isDup || wrong;
+    const cast = votes[p] || {};
+    const yes = Object.values(cast).filter(v => v === true).length;
+    const no  = Object.values(cast).filter(v => v === false).length;
+    const mine = cast[me];
+    if(!dead && mine === undefined) pending++;
+
+    const why = blank ? "No answer" : isDup ? "Duplicate" : wrong ? "Wrong letter" : "";
+    const text = blank ? "—" : escapeHtml(raw);
+    const rejected = !dead && settled && no > yes;
+    const struck = dead || rejected;
+
+    let right;
+    if(dead){
+      right = `<span class="verdict no">${why}</span>`;
+    } else if(settled){
+      right = rejected
+        ? `<span class="verdict no">Rejected ${yes}–${no}</span>`
+        : `<span class="verdict ok">Valid ${yes}–${no}</span>`;
+    } else {
+      right = `<span class="tally">${yes} of ${yes + no}</span>`;
+    }
+
+    const buttons = dead ? "" :
+      `<div class="vbtns">
+         <button class="vbtn ${mine === true ? "on" : ""}" data-p="${p}" data-v="1">Valid</button>
+         <button class="vbtn ${mine === false ? "on" : ""}" data-p="${p}" data-v="0">No</button>
+       </div>`;
+
+    return `<div class="vote-row">
+              <span class="who">${escapeHtml(players[p] ? players[p].name : "?")}${p === me ? " (you)" : ""}</span>
+              <span class="said ${struck ? "dead" : ""}">${text}</span>
+              ${right}${buttons}
+            </div>`;
+  }).join("");
+
+  $("voteRows").querySelectorAll(".vbtn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      update(roomRef, {
+        [`votes/${room.round}/${ci}/${b.dataset.p}/${me}`]: b.dataset.v === "1"
+      });
+    });
+  });
+
+  const last = ci === total - 1;
+  $("nextCatBtn").textContent = last ? "Finish voting" : "Next category";
+  $("nextCatBtn").classList.toggle("hide", !isHost());
+  $("prevCatBtn").classList.toggle("hide", !isHost() || ci === 0);
+
+  if(pending) $("voteNote").textContent = "Vote on every answer, including your own.";
+  else $("voteNote").textContent = "Results are in.";
+
+  /* let the results sit long enough to read, then move on */
+  if(isHost() && !settled) return;
+  if(isHost() && lastAuto !== `${room.round}:${ci}`){
+    lastAuto = `${room.round}:${ci}`;
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(()=>{
+      if(room && room.phase === "voting" && (room.voteIndex || 0) === ci) advanceVote(1);
+    }, 3200);
+  }
+}
+
+function allVotesIn(ci){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const dupes = dupesFor(ci);
+  const votes = ((room.votes && room.votes[room.round]) || {})[ci] || {};
+  const ids = playerIds();
+  return ids.every(owner=>{
+    const raw = (answers[owner] && answers[owner][ci]) || "";
+    if(!raw.trim() || dupes.includes(owner) || !validStart(raw)) return true;
+    const cast = votes[owner] || {};
+    return ids.every(v => cast[v] !== undefined);
+  });
+}
+
+function advanceVote(step){
+  const ci = room.voteIndex || 0;
+  const next = ci + step;
+  clearTimeout(autoTimer);
+  if(next < 0) return;
+  if(next >= room.categories.length){ tally(); return; }
+  update(roomRef, { voteIndex: next });
+}
+
+$("nextCatBtn").addEventListener("click", ()=>{ if(isHost()) advanceVote(1); });
+$("prevCatBtn").addEventListener("click", ()=>{ if(isHost()) advanceVote(-1); });
+
+function tally(){
+  const answers = (room.answers && room.answers[room.round]) || {};
+  const votes = (room.votes && room.votes[room.round]) || {};
+  const gained = {};
+
+  playerIds().forEach(p=>{
+    let pts = 0;
+    room.categories.forEach((cat, ci)=>{
+      const raw = (answers[p] && answers[p][ci]) || "";
+      if(!raw.trim()) return;
+      if(dupesFor(ci).includes(p)) return;
+      if(!validStart(raw)) return;
+      const cast = (votes[ci] && votes[ci][p]) || {};
+      const yes = Object.values(cast).filter(v => v === true).length;
+      const no  = Object.values(cast).filter(v => v === false).length;
+      if(no > yes) return;          /* majority rejected it */
+      pts++;
+    });
+    gained[p] = pts;
+  });
+
+  const updates = { phase: "scores", [`gained/${room.round}`]: gained };
+  playerIds().forEach(p=>{
+    const cur = (room.players[p] && room.players[p].score) || 0;
+    updates[`players/${p}/score`] = cur + gained[p];
+  });
+  update(roomRef, updates);
+}
+
+/* ---------- scores ---------- */
+function renderScores(){
+  const done = room.round >= room.rounds;
+  const gained = (room.gained && room.gained[room.round]) || {};
+  const rows = playerIds()
+    .map(p => ({ p, name: room.players[p].name, score: room.players[p].score || 0, got: gained[p] || 0 }))
+    .sort((a,b) => b.score - a.score);
+
+  const top = rows.length ? rows[0].score : 0;
+  const winners = rows.filter(r => r.score === top).map(r => r.name);
+
+  $("scoreTitle").textContent = done
+    ? (winners.length > 1 ? "Tied: " + winners.join(" & ") : winners[0] + " wins")
+    : "After round " + room.round;
+
+  $("scoreList").innerHTML = rows.map(r=>
+    `<li><span>${escapeHtml(r.name)}</span>
+     <span><span class="tagpill">+${r.got}</span> <span class="num">${r.score}</span></span></li>`
+  ).join("");
+
+  $("nextBtn").classList.toggle("hide", done || !isHost());
+  $("againBtn").classList.toggle("hide", !done || !isHost());
+  $("leaveBtn2").classList.toggle("hide", !done);
+  $("scoreNote").textContent = isHost() ? "" : "Waiting for the host.";
+}
+
+/* ---------- leaving ---------- */
+async function leaveRoom(){
+  if(!roomRef || !code) return;
+  const mid = room && room.phase !== "lobby" && room.phase !== "scores";
+  if(mid && !confirm("Leave the game in progress?")) return;
+
+  const c = code, last = playerIds().length <= 1;
+
+  /* stop listening first so the removal doesn't re-render a half-gone room */
+  if(unsub){ unsub(); unsub = null; }
+  clearInterval(clockTimer); clearInterval(cdTimer);
+  clearTimeout(autoTimer); clearTimeout(endTimer); endTimer = null;
+  clearTimeout(introTimer); clearTimeout(introTimer2);
+  ["cd","pauseOv","voteIntro"].forEach(i => $(i).classList.add("hide"));
+
+  try{
+    await onDisconnect(ref(db, `rooms/${c}/players/${me}`)).cancel();
+    if(last) await remove(ref(db, "rooms/" + c));
+    else await remove(ref(db, `rooms/${c}/players/${me}`));
+  }catch(e){ /* nothing useful to do if the write fails */ }
+
+  code = null; room = null; roomRef = null; lastPhase = null; lastAuto = null;
+  $("leaveBtn").classList.add("hide");
+  $("hmeta").textContent = "Multiplayer";
+  $("footLeft").textContent = "Connected";
+  $("joinErr").textContent = "";
+  $("codeIn").value = "";
+  show("v-home");
+}
+
+$("leaveBtn").addEventListener("click", leaveRoom);
+$("leaveBtn2").addEventListener("click", leaveRoom);
+
+function playVoteIntro(){
+  const el = $("voteIntro");
+  $("voteIntroRound").textContent = `Round ${room.round} of ${room.rounds}`;
+  clearTimeout(introTimer); clearTimeout(introTimer2);
+  el.classList.remove("hide", "out");
+  introTimer  = setTimeout(()=> el.classList.add("out"), 1700);
+  introTimer2 = setTimeout(()=>{ el.classList.add("hide");
+    $("v-vote").classList.remove("fadein"); void $("v-vote").offsetWidth;
+    $("v-vote").classList.add("fadein"); }, 2200);
+}
+
+/* ---------- render ---------- */
+function render(){
+  /* host left: promote the first remaining player */
+  if(room.hostId && !playerIds().includes(room.hostId) && playerIds()[0] === me){
+    update(roomRef, { hostId: me });
+  }
+  $("hmeta").textContent = code ? "Room " + code + (isHost() ? " · host" : "") : "Multiplayer";
+  $("leaveBtn").classList.toggle("hide", !code);
+
+  const phase = room.phase;
+  $("cd").classList.toggle("hide", phase !== "countdown");
+  if(phase !== "countdown") $("cd").classList.remove("out");
+
+  if(phase === "countdown"){
+    if(lastPhase !== "countdown"){
+      clearInterval(cdTimer);
+      cdTimer = setInterval(tickCountdown, 100);
+    }
+    tickCountdown();
+    lastPhase = phase;
+    return;
+  }
+  clearInterval(cdTimer);
+
+  if(phase === "lobby"){
+    show("v-lobby");
+    $("lobbyCode").textContent = code;
+    $("hostSettings").classList.toggle("hide", !isHost());
+    $("waitNote").classList.toggle("hide", isHost());
+    if(isHost() && document.activeElement.tagName !== "INPUT"){
+      $("setSeconds").value = room.seconds;
+      $("setRounds").value = room.rounds;
+      $("setCats").value = room.catCount;
+    }
+    $("lobbyPlayers").innerHTML = playerIds().map(p=>
+      `<li><span>${escapeHtml(room.players[p].name)}</span>
+       ${p === room.hostId ? '<span class="tagpill">Host</span>' : ""}</li>`).join("");
+    $("startBtn").disabled = playerIds().length < 2;
+    $("startNote").textContent = playerIds().length < 2 ? "Waiting for at least one more player." : "";
+  }
+
+  else if(phase === "playing"){
+    if(lastPhase !== "playing"){
+      show("v-play");
+      $("v-play").classList.remove("fadein"); void $("v-play").offsetWidth;
+      $("v-play").classList.add("fadein");
+      buildAnswerInputs();
+      $("doneBtn").disabled = false;
+      $("submitNote").textContent = "";
+      $("playLetter").textContent = room.letter;
+      $("roundLabel").textContent = `Round ${room.round} of ${room.rounds}`;
+      clearInterval(clockTimer);
+      clockTimer = setInterval(tickClock, 250);
+    }
+    const sub = (room.submitted && room.submitted[room.round]) || {};
+    const n = Object.keys(sub).length;
+    if(n && !$("doneBtn").disabled) $("submitNote").textContent = `${n} of ${playerIds().length} finished.`;
+
+    const paused = !!room.paused;
+    $("pauseBtn").classList.toggle("hide", !isHost());
+    $("pauseOv").classList.toggle("hide", !paused);
+    $("pauseWho").textContent = paused ? `Paused by ${room.pausedBy || "the host"}` : "";
+    $("resumeBtn").classList.toggle("hide", !isHost());
+    $("pauseHint").classList.toggle("hide", isHost());
+    $("pauseBtn").disabled = paused;
+    document.querySelectorAll("#answerList input").forEach(i => i.disabled = paused);
+
+    if(!paused && isHost() && allSubmitted() && !endTimer){
+      endTimer = setTimeout(()=>{ endTimer = null;
+        if(room && room.phase === "playing") toVoting(); }, 400);
+    }
+    tickClock();
+  }
+
+  else if(phase === "voting"){
+    clearInterval(clockTimer);
+    $("pauseOv").classList.add("hide");
+    if(lastPhase !== "voting") playVoteIntro();
+    show("v-vote");
+    renderVoting();
+  }
+
+  else if(phase === "scores"){
+    show("v-scores");
+    renderScores();
+  }
+
+  lastPhase = phase;
+}
 </script>
 </body>
 </html>
