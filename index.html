@@ -217,12 +217,25 @@
   .cats-wrap{position:relative;flex:1;min-height:0;}
   .cats-wrap.open .veil{opacity:0;}
   ol.cats li::before{
-    content:counter(c,decimal-leading-zero);
-    font-family:var(--mono);font-size:12px;color:var(--mute);min-width:26px;
+    content:counter(c);
+    font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;
+    font-size:clamp(14px,1.95vh,20px);letter-spacing:.02em;
+    color:#3D3D3D;min-width:38px;
   }
   ol.cats li span{font-size:clamp(14px,2.3vh,23px);font-weight:500;letter-spacing:-.01em;}
   ol.cats li.struck span{text-decoration:line-through;color:var(--mute);}
   ol.cats li.struck::before{color:var(--ink);}
+  .answer{
+    margin-left:auto;padding-left:18px;text-align:right;
+    font-family:var(--mono);font-size:clamp(11px,1.5vh,14px);
+    color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%;
+    opacity:0;transition:opacity .35s ease;transition-delay:calc(var(--i) * 45ms);
+  }
+  .answer.in{opacity:1;}
+  .ex-status{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);
+  }
 
   /* small screens fall back to a normal scrolling stack */
   @media (max-width:900px),(max-height:520px){
@@ -292,6 +305,7 @@
     <div class="list-col">
       <div class="list-head">
         <h2>Categories</h2>
+        <span class="ex-status" id="exStatus"></span>
         <div class="head-actions">
           <div class="dd" id="countDD">
             <button class="dd-btn" id="countBtn" aria-haspopup="listbox" aria-expanded="false">
@@ -382,6 +396,7 @@ const CATEGORIES = [
 /* ---------------- state ---------------- */
 const $ = id => document.getElementById(id);
 let total = 120, left = 120, ticking = false, timer = null, round = 0, catCount = 12;
+let currentCats = [];
 
 /* ---------------- categories render ---------------- */
 function shuffle(a){
@@ -392,6 +407,8 @@ function shuffle(a){
 function drawCategories(){
   const n = catCount;
   const picked = shuffle(CATEGORIES).slice(0,n);
+  currentCats = picked;
+  $("exStatus").textContent = "";
   $("cats").innerHTML = picked.map((c,i)=>`<li style="--i:${i}"><span>${c}</span></li>`).join("");
   conceal();
 }
@@ -459,7 +476,7 @@ function setTotal(sec){
 }
 function tick(){
   left--;
-  if(left <= 0){ left = 0; paint(); stop(); $("state").textContent = "Time"; chime(); return; }
+  if(left <= 0){ left = 0; paint(); stop(); $("state").textContent = "Time"; chime(); showExamples(); return; }
   paint();
 }
 function start(){
@@ -481,7 +498,57 @@ function toggle(){
   else start();
 }
 function reset(){
-  left = total; stop(); conceal(); $("state").textContent = "Ready"; paint();
+  left = total; stop(); conceal(); clearAnswers(); $("state").textContent = "Ready"; paint();
+}
+
+/* ---------------- example answers ---------------- */
+function clearAnswers(){
+  $("cats").querySelectorAll(".answer").forEach(a=>a.remove());
+  $("exStatus").textContent = "";
+}
+function paintAnswers(list){
+  const rows = [...$("cats").children];
+  rows.forEach((li,i)=>{
+    if(li.querySelector(".answer")) return;
+    const el = document.createElement("span");
+    el.className = "answer";
+    el.style.setProperty("--i", i);
+    el.textContent = list[i] || "—";
+    li.appendChild(el);
+    requestAnimationFrame(()=>el.classList.add("in"));
+  });
+}
+async function showExamples(){
+  const letter = lastLetter, cats = currentCats.slice();
+  if(!cats.length) return;
+  $("exStatus").textContent = "Finding examples…";
+  const prompt =
+    `For each numbered category below, give one common, valid answer that begins with the letter "${letter}".\n` +
+    `Keep every answer to 1-3 words. If nothing reasonable fits, use a dash.\n` +
+    `Reply with ONLY a JSON array of ${cats.length} strings in the same order. No preamble, no code fences.\n\n` +
+    cats.map((c,i)=>`${i+1}. ${c}`).join("\n");
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    if(!res.ok) throw new Error("request failed");
+    const data = await res.json();
+    const text = data.content.filter(b=>b.type === "text").map(b=>b.text).join("").trim();
+    const parsed = JSON.parse(text.replace(/^```(?:json)?/,"").replace(/```$/,"").trim());
+    if(!Array.isArray(parsed)) throw new Error("bad shape");
+    /* only paint if the round hasn't moved on */
+    if(lastLetter !== letter) return;
+    paintAnswers(parsed.map(v=>String(v)));
+    $("exStatus").textContent = "Sample answers";
+  }catch(err){
+    $("exStatus").textContent = "Examples unavailable";
+  }
 }
 
 /* end-of-round buzzer */
