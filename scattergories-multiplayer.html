@@ -147,8 +147,9 @@
   }
   .cd-num{
     font-weight:900;font-size:min(46vh,42vw);line-height:.9;letter-spacing:-.04em;
-    font-variant-numeric:tabular-nums;
+    font-variant-numeric:tabular-nums;min-height:0;
   }
+  .cd-num:empty{display:none;}
   .cd-num.go{font-size:min(22vh,26vw);letter-spacing:-.02em;}
 
   .verdict{
@@ -200,22 +201,29 @@
   ol.rank .tot{font-weight:900;font-size:clamp(24px,3.4vw,34px);font-variant-numeric:tabular-nums;
     min-width:60px;text-align:right;}
 
-  .bd{border:1px solid var(--ink);margin-bottom:-1px;}
-  .bd-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
-    padding:12px 16px;background:var(--wash);border-bottom:1px solid var(--ink);}
-  .bd-head .who2{font-weight:700;font-size:16px;}
-  .bd-head .sum{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--mute);}
-  .bd-row{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);}
+  .bd{border:1px solid var(--ink);margin-bottom:18px;}
+  .bd-head{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:14px 18px;background:var(--ink);color:var(--paper);}
+  .bd-head .who2{font-weight:800;font-size:18px;letter-spacing:-.01em;}
+  .bd-head .sum{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:#B8B8B8;}
+  .bd-head .sum b{color:var(--paper);font-weight:700;}
+  .bd-row{display:grid;grid-template-columns:1fr 1.3fr auto;align-items:center;gap:16px;
+    padding:12px 18px;border-bottom:1px solid var(--rule);}
   .bd-row:last-child{border-bottom:0;}
-  .bd-cat{flex:1.1;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;color:var(--mute);
-    min-width:130px;}
-  .bd-ans{flex:1.4;font-weight:600;font-size:15px;min-width:110px;}
-  .bd-ans.out{text-decoration:line-through;color:var(--mute);font-weight:400;}
-  .pts{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-    padding:3px 9px;border:1px solid currentColor;white-space:nowrap;min-width:78px;text-align:center;}
-  .pts.win{color:#14874A;}
-  .pts.loss{color:#CB2020;}
+  .bd-row.miss{background:var(--wash);}
+  .bd-cat{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--mute);}
+  .bd-ans{font-weight:700;font-size:17px;letter-spacing:-.01em;}
+  .bd-ans.out{text-decoration:line-through;color:#B0B0B0;font-weight:400;}
+  .pts{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 12px;white-space:nowrap;min-width:96px;text-align:center;font-weight:700;}
+  .pts.win{background:#14874A;color:#fff;}
+  .pts.loss{background:var(--paper);color:var(--mute);border:1px solid var(--rule);font-weight:400;}
+  @media (max-width:560px){
+    .bd-row{grid-template-columns:1fr auto;gap:6px 12px;}
+    .bd-cat{grid-column:1 / -1;}
+  }
 
   .hide{display:none!important;}
 </style>
@@ -225,7 +233,7 @@
   <header>
     <h1 class="wordmark">Scattergories</h1>
     <span class="headwrap">
-      <a class="headlink" href="index.html">IRL Generator</a>
+      <a class="headlink" href="scattergories.html">Solo generator</a>
       <button class="headlink hide" id="leaveBtn">Leave room</button>
       <span class="meta" id="hmeta">Multiplayer</span>
     </span>
@@ -501,10 +509,28 @@ function show(id){
   ["v-config","v-home","v-lobby","v-play","v-vote","v-scores"]
     .forEach(v => $(v).classList.toggle("hide", v !== id));
 }
+/* For duplicate matching only: lowercase, drop a leading article, strip
+   punctuation, then fold a word to a rough singular so "egg"/"eggs",
+   "berry"/"berries", "box"/"boxes" collide. Multi-word answers get each word
+   folded, so "red apples" and "red apple" also match. This is deliberately
+   loose — it's better to catch an obvious plural than to miss it. */
+function singular(w){
+  if(w.length <= 3) return w;                 // ice, pea — leave alone
+  if(/(ss|us|is)$/.test(w)) return w;          // glass, cactus, axis
+  if(/ies$/.test(w)) return w.slice(0, -3) + "y";   // berries -> berry
+  if(/(ches|shes|xes|zes|ses)$/.test(w)) return w.slice(0, -2); // boxes -> box
+  if(/ves$/.test(w)) return w.slice(0, -3) + "f";   // leaves -> leaf
+  if(/oes$/.test(w)) return w.slice(0, -2);    // tomatoes -> tomato
+  if(/s$/.test(w)) return w.slice(0, -1);      // eggs -> egg
+  return w;
+}
 function norm(s){
   return (s || "").toLowerCase().trim()
     .replace(/^(a|an|the)\s+/, "")
-    .replace(/[^a-z0-9]/g, "");
+    .split(/[\s\-–—]+/)
+    .map(w => singular(w.replace(/[^a-z0-9]/g, "")))
+    .filter(Boolean)
+    .join("");
 }
 function shuffle(a){
   const o = a.slice();
@@ -656,9 +682,11 @@ function tickCountdown(){
 
   if(gone < CD_LEAD){
     $("cdNum").textContent = "";
+    $("cdRound").style.visibility = "hidden";
     $("cd").classList.remove("out");
     return;
   }
+  $("cdRound").style.visibility = "visible";
 
   const left = CD_SECONDS - (gone - CD_LEAD);
   $("cdNum").classList.remove("go");
@@ -1005,7 +1033,7 @@ function renderScores(){
         const badge = L.p
           ? `<span class="pts win">+${L.p}</span>`
           : `<span class="pts loss">${escapeHtml(L.r || "No points")}</span>`;
-        return `<div class="bd-row">
+        return `<div class="bd-row ${L.p ? "" : "miss"}">
                   <span class="bd-cat">${escapeHtml(L.c || "")}</span>
                   <span class="bd-ans ${L.p ? "" : "out"}">${shown}</span>
                   ${badge}
@@ -1017,7 +1045,7 @@ function renderScores(){
       return `<div class="bd">
                 <div class="bd-head">
                   <span class="who2">${escapeHtml(who)}${pid === me ? " (you)" : ""}</span>
-                  <span class="sum">${scored} of ${lines.length} scored &middot; +${got}</span>
+                  <span class="sum"><b>${scored}</b> of ${lines.length} scored &middot; <b>+${got}</b></span>
                 </div>${html}
               </div>`;
     }).join("");
